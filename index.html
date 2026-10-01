@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Layline Trainer</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Layline">
+<meta name="theme-color" content="#0F2233">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<script>window.LAYLINE_PWA=true;</script>
+<style>
+@font-face{font-family:'Barlow';font-weight:400;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-400-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:600;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow';font-weight:700;font-style:normal;font-display:swap;src:url(fonts/barlow-latin-700-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:500;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-500-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:600;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-600-normal.woff2) format('woff2')}
+@font-face{font-family:'Barlow Condensed';font-weight:700;font-style:normal;font-display:swap;src:url(fonts/barlow-condensed-latin-700-normal.woff2) format('woff2')}
+
+:root{
+  --bg:#E4EDF2; --surface:#F5F9FB; --ink:#10283D; --muted:#4D6577; --rule:#BACBD5;
+  --accent:#1F6FB2; --good:#1E8A55; --bad:#C8323C; --warn:#B7860B; --screen:#0F2233;
+  --water:#D3E3EC; --track:#1F6FB2; --ghost:#7E8F9C; --puff:#1D4F7E; --lull:#FFFFFF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C1822; --surface:#132431; --ink:#DCE6ED; --muted:#93A9B8; --rule:#27404F;
+    --accent:#6FB2EA; --good:#46C585; --bad:#EE6B73; --warn:#E3B53E; --screen:#0A1926;
+    --water:#10283A; --track:#6FB2EA; --ghost:#7F95A5; --puff:#4C9BE0; --lull:#8FA3B3;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C1822; --surface:#132431; --ink:#DCE6ED; --muted:#93A9B8; --rule:#27404F;
+  --accent:#6FB2EA; --good:#46C585; --bad:#EE6B73; --warn:#E3B53E; --screen:#0A1926;
+  --water:#10283A; --track:#6FB2EA; --ghost:#7F95A5; --puff:#4C9BE0; --lull:#8FA3B3;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;-webkit-tap-highlight-color:transparent;overscroll-behavior-y:none;background:var(--bg);color:var(--ink);font-family:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;font-size:16px;line-height:1.5;-webkit-text-size-adjust:100%}
+.wrap{max-width:1040px;margin:0 auto;padding:18px 16px 40px}
+h1,h2,h3{font-family:"Barlow Condensed","Barlow",system-ui,sans-serif;line-height:1.1;margin:0}
+h1{font-size:clamp(2.1rem,6vw,3.2rem);font-weight:700}
+h2{font-size:1.7rem;font-weight:600}
+h3{font-size:1.2rem;font-weight:600}
+p{margin:0 0 .8em;max-width:68ch}
+.muted{color:var(--muted)}
+:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.hidden{display:none!important}
+
+.panel{background:var(--surface);border:1px solid var(--rule);border-radius:14px;padding:16px}
+.btn{font:inherit;font-weight:600;font-size:.95rem;padding:9px 15px;border-radius:999px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+:root[data-theme="dark"] .btn.primary{color:#0C1822}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .btn.primary{color:#0C1822}}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+/* setup */
+.setup{display:grid;grid-template-columns:1.1fr .9fr;gap:18px;margin-top:16px}
+.field label{display:block;font-weight:600;font-size:.9rem;margin-bottom:4px}
+.field input{font:inherit;font-family:"Barlow Condensed",sans-serif;font-size:1.3rem;font-weight:600;letter-spacing:.04em;padding:6px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--bg);color:var(--ink);width:150px;text-transform:uppercase}
+.seg{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin-top:6px}
+.seg button{font:inherit;text-align:left;padding:10px 12px;border-radius:10px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.seg button[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.seg strong{display:block}
+.seg small{display:block;color:var(--muted);font-size:.8rem;line-height:1.3}
+.brief h2{margin:2px 0 6px}
+.brief .code{font-family:"Barlow Condensed",sans-serif;font-weight:600;color:var(--accent);font-size:1.05rem}
+.hint{border-left:3px solid var(--warn);padding:6px 10px;background:color-mix(in srgb,var(--warn) 10%,transparent);border-radius:0 8px 8px 0;margin-top:8px}
+.history{margin-top:12px;font-size:.9rem}
+.history table{border-collapse:collapse;width:100%}
+.history td,.history th{padding:4px 6px;border-bottom:1px solid var(--rule);text-align:left}
+.history th{font-weight:600;color:var(--muted)}
+
+/* race */
+.race{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;margin-top:16px;align-items:start}
+.status{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.stat{background:var(--surface);border:1px solid var(--rule);border-radius:10px;padding:6px 8px}
+.stat b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:1.25rem;font-weight:600;line-height:1.1;white-space:nowrap}
+.stat span{font-size:.75rem;color:var(--muted)}
+.dialbox{background:var(--screen);border-radius:20px;padding:12px}
+.dial{display:block;width:100%;height:auto;max-width:440px;margin:0 auto}
+.tiles{display:grid;grid-template-columns:repeat(5,1fr);gap:4px;margin-top:8px}
+.tile{background:rgba(255,255,255,.05);border-radius:8px;padding:5px 3px;text-align:center;color:#E8EEF2;min-width:0}
+.tile b{display:block;font-family:"Barlow Condensed",sans-serif;font-size:1.1rem;font-weight:600;line-height:1.1;white-space:nowrap}
+.tile span{display:block;font-size:.64rem;color:#93AABB;white-space:nowrap}
+.timer{height:6px;background:var(--rule);border-radius:3px;overflow:hidden;margin-top:10px}
+.timer i{display:block;height:100%;background:var(--warn);width:100%}
+.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.act{touch-action:manipulation;font:inherit;font-weight:600;padding:14px 8px;border-radius:12px;border:1px solid var(--rule);background:var(--surface);color:var(--ink);cursor:pointer;font-size:1rem}
+.act:hover:not(:disabled){border-color:var(--accent)}
+.act:disabled{opacity:.45;cursor:default}
+.act.tack{background:var(--accent);color:#fff;border-color:var(--accent)}
+:root[data-theme="dark"] .act.tack{color:#0C1822}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .act.tack{color:#0C1822}}
+.act.mark{border-color:#C9A21E;background:color-mix(in srgb,#F2C230 18%,var(--surface))}
+.act.mark.on{box-shadow:inset 0 0 0 2px #C9A21E}
+.fleetmsg{margin:-2px 0 10px;padding:8px 12px;border-radius:10px;font-size:.92rem;font-weight:600;background:color-mix(in srgb,var(--warn) 16%,var(--surface));border:1px solid color-mix(in srgb,var(--warn) 45%,var(--rule))}
+.fleetmsg.bad{background:color-mix(in srgb,var(--bad) 14%,var(--surface));border-color:color-mix(in srgb,var(--bad) 45%,var(--rule))}
+.restable{width:100%;border-collapse:collapse;margin-top:10px;font-size:.95rem}.restable td,.restable th{padding:5px 6px;border-bottom:1px solid var(--rule);text-align:left}.restable tr.me td{font-weight:700;color:var(--accent)}
+.helmbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:10px;font-size:.9rem}
+.act small{display:block;font-weight:500;font-size:.72rem;opacity:.75}
+.coach ol{margin:6px 0 0;padding-left:1.2em}
+.coach li{margin-bottom:5px}
+.log{list-style:none;margin:8px 0 0;padding:0;font-size:.9rem;max-height:150px;overflow:auto}
+.log li{padding:4px 0;border-bottom:1px dashed var(--rule)}
+.log li.bad{color:var(--bad)}
+.log li.good{color:var(--good)}
+.map{display:block;width:100%;height:auto;border-radius:12px}
+.map .water{fill:var(--water)}
+.map .trk{fill:none;stroke:var(--track);stroke-width:2.2;stroke-linejoin:round}
+.map .gtrk{fill:none;stroke:var(--ghost);stroke-width:1.8;stroke-dasharray:4 4}
+.map .you{fill:var(--track)}
+.map .gh{fill:var(--ghost)}
+.map .lay{stroke:var(--muted);stroke-width:1;stroke-dasharray:3 4;opacity:.7}
+.map .lbl{fill:var(--muted);font-size:10px;font-family:Barlow,sans-serif}
+.map .pf{fill:var(--puff)}.map .ll{fill:var(--lull)}.map .shade{fill:var(--ink);opacity:.07}.map .flbl{font-size:9px;font-family:Barlow,sans-serif;font-weight:600}
+.map .wind{stroke:var(--ink);stroke-width:2;fill:none}
+.side{display:flex;flex-direction:column;gap:14px}
+
+/* debrief */
+.debrief{margin-top:16px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:18px;align-items:start}
+.grade{font-family:"Barlow Condensed",sans-serif;font-size:4.5rem;font-weight:700;line-height:.9;color:var(--accent)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 12px;margin-top:10px}
+.kv span:nth-child(odd){color:var(--muted)}
+.kv span:nth-child(even){font-weight:600;text-align:right}
+.lessons li{margin-bottom:6px}
+
+@media (max-width:780px){
+  .setup,.race,.debrief{grid-template-columns:1fr}
+  .seg{grid-template-columns:1fr}
+  .status{grid-template-columns:repeat(2,1fr)}
+  .tile b{font-size:.95rem}
+}
+
+/* tutorial */
+.hlring{fill:none;stroke:#F2C230;stroke-width:3;stroke-dasharray:5 4;animation:pulse 1.4s ease-in-out infinite;transform-box:fill-box;transform-origin:center}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.hltile{box-shadow:inset 0 0 0 2px #F2C230}
+@media (prefers-reduced-motion:reduce){.hlring{animation:none}}
+.tut{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 14px) 14px calc(env(safe-area-inset-bottom,0px) + 20px)}
+.tutcard{max-width:960px;margin:0 auto;background:var(--surface);border:1px solid var(--rule);border-radius:18px;padding:18px}
+.tuttop{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}
+.dots{display:flex;gap:5px;flex-wrap:wrap}
+.dots i{width:9px;height:9px;border-radius:50%;background:var(--rule)}
+.dots i.on{background:var(--accent)}
+.dots i.done{background:color-mix(in srgb,var(--accent) 50%,var(--rule))}
+.tutgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;align-items:start}
+.tutbody h2{margin-bottom:8px}
+.tutbody p{font-size:1rem}
+.task{margin-top:12px;padding:12px;border-radius:12px;border:1px dashed var(--accent)}
+.task .q{font-weight:600;margin-bottom:8px}
+.topts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.topt{font:inherit;font-weight:600;padding:11px 8px;border-radius:10px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.topt:hover:not(:disabled){border-color:var(--accent)}
+.topt.right{border-color:var(--good);background:color-mix(in srgb,var(--good) 15%,var(--bg))}
+.topt.wrong{border-color:var(--bad);background:color-mix(in srgb,var(--bad) 12%,var(--bg))}
+.tfb{margin-top:10px;font-size:.95rem}
+.tfb.ok{color:var(--good)}
+.tfb.no{color:var(--bad)}
+.tutnav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:16px;flex-wrap:wrap}
+@media (max-width:780px){.tutgrid{grid-template-columns:1fr}}
+.sbcard{max-width:720px}
+.sbtabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.sbtabs button{font:inherit;font-size:.9rem;font-weight:600;padding:7px 12px;border-radius:999px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.sbtabs button[aria-selected="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.sbtabs button .dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--good);margin-left:6px;vertical-align:middle}
+.vdock{position:fixed;left:0;right:0;bottom:0;z-index:40;background:var(--surface);border-top:1px solid var(--rule);padding:10px 12px calc(env(safe-area-inset-bottom,0px) + 10px);box-shadow:0 -6px 20px rgba(0,0,0,.12)}
+.vdinner{max-width:1040px;margin:0 auto;display:flex;gap:12px;align-items:center}
+.vdplayer{flex:0 0 200px;width:200px;height:200px;border-radius:10px;overflow:hidden;background:#000}
+.vdplayer iframe{width:200px;height:200px;border:0;display:block}
+.vdinfo{display:flex;flex-direction:column;min-width:0}
+body.docked{padding-bottom:120px}
+body.dockedyt{padding-bottom:236px}
+.vox{background:var(--bg);border:1px solid var(--rule);border-radius:12px;padding:12px;margin-bottom:16px}
+.vox .row{gap:8px}
+.vox .frame{position:relative;width:100%;padding-top:56.25%;border-radius:10px;overflow:hidden;background:#000;margin-top:10px}
+.vox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vox input{font:inherit;font-size:.9rem;flex:1;min-width:160px;padding:7px 10px;border:1px solid var(--rule);border-radius:8px;background:var(--surface);color:var(--ink)}
+.vox a.btn{text-decoration:none;display:inline-block}
+.lyrics .st{margin:0 0 16px;line-height:1.55;font-size:1.02rem}
+.lyrics .st span{display:block}
+.lyrics .rs{color:var(--accent);font-style:italic;padding-left:1.2em}
+.lyrics .ch{font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="row" style="justify-content:space-between"><h1>Layline Trainer</h1><div class="row"><button class="btn" id="musicBtn" aria-pressed="false" title="Traditional sea shanties and a public-domain pirate ballad">♪ Music off</button><input type="range" id="musicVol" min="0" max="1" step="0.05" aria-label="Music volume" style="width:84px;accent-color:var(--accent)"><button class="btn" id="voxBtn" aria-pressed="false">🎤 Vocals off</button><button class="btn" id="songBtn">Lyrics</button><button class="btn" id="tutBtn">Tutorial</button></div></div>
+  <p class="muted">Every scenario is generated from a code, so you can replay it, share it, or chase your best time. Read the display, decide, and race a ghost boat that sails perfect angles.</p>
+</header>
+
+<!-- SETUP -->
+<section id="setup" class="setup">
+  <div class="panel">
+    <div class="row" style="align-items:flex-end">
+      <div class="field"><label for="code">Scenario code</label><input id="code" maxlength="8" autocomplete="off" spellcheck="false"></div>
+      <button class="btn" id="randBtn">New random</button>
+      <button class="btn" id="dailyBtn">Daily challenge</button>
+    </div>
+    <div style="margin-top:14px"><strong style="font-size:.9rem">Difficulty</strong>
+      <div class="seg" id="diff">
+        <button data-d="easy" aria-pressed="false"><strong>Deckhand</strong><small>Coach reads the screen for you. Map visible. No clock.</small></button>
+        <button data-d="club" aria-pressed="true"><strong>Navigator</strong><small>No coach. Map visible. No clock.</small></button>
+        <button data-d="pro" aria-pressed="false"><strong>Tactician</strong><small>Display only, noisy sensors, 12 seconds per decision.</small></button>
+        <button data-d="master" aria-pressed="false"><strong>Master</strong><small>Race a fleet of 5 boats. Dirty air and port/starboard rules. Map, no coach. Graded by place.</small></button>
+      </div>
+    </div>
+    <div class="row" style="margin-top:16px"><button class="btn primary" id="startBtn">Start race</button><span class="muted" style="font-size:.9rem">Keys: U head up, D bear away, T tack/gybe, Space hold</span></div>
+  </div>
+  <div class="panel brief" id="brief"></div>
+</section>
+
+<!-- RACE -->
+<section id="race" class="race hidden">
+  <div>
+    <div class="status">
+      <div class="stat"><b id="sLeg">Beat</b><span>Leg</span></div>
+      <div class="stat"><b id="sTime">0:00</b><span>Race time</span></div>
+      <div class="stat"><b id="sDtw">0.00</b><span>To mark (nm)</span></div>
+      <div class="stat"><b id="sGhost">even</b><span id="sGhostL">Ghost</span></div>
+    </div>
+    <div class="fleetmsg hidden" id="fleetMsg"></div>
+    <div class="dialbox" id="dial"></div>
+    <div class="timer hidden" id="timer"><i id="timerBar"></i></div>
+    <div class="actions">
+      <button class="act" id="aUp">Head up<small>5° toward wind</small></button>
+      <button class="act tack" id="aTack">Tack<small>onto target angle</small></button>
+      <button class="act" id="aDown">Bear away<small>5° off wind</small></button>
+      <button class="act mark" id="aMark">Steer for mark<small>aim COG at the dot</small></button>
+      <button class="act" id="aHold">Hold<small>45 seconds</small></button>
+      <button class="act" id="aHold3">Hold ×3<small>stops at marks</small></button>
+    </div>
+    <div class="helmbar"><button class="btn" id="aAuto" aria-pressed="true">Auto-helm: on</button><span class="muted" id="helmState"></span><button class="btn" id="aQuit" style="margin-left:auto">Retire</button></div>
+  </div>
+  <div class="side">
+    <div class="panel coach" id="coach"><h3>Coach</h3><ol id="coachList"></ol></div>
+    <div class="panel" id="mapPanel"><h3 style="margin-bottom:8px">Course</h3><div id="map"></div></div>
+    <div class="panel"><h3>Race log</h3><ul class="log" id="log"></ul></div>
+  </div>
+</section>
+
+<!-- TUTORIAL -->
+<div class="tut hidden" id="tut" role="dialog" aria-modal="true" aria-labelledby="tutTitle">
+  <div class="tutcard">
+    <div class="tuttop"><div><span class="muted" id="tutStep" style="font-size:.9rem"></span><div class="dots" id="tutDots"></div></div><button class="btn" id="tutSkip">Skip tutorial</button></div>
+    <div class="tutgrid">
+      <div class="dialbox" id="tutDial"></div>
+      <div class="tutbody"><h2 id="tutTitle"></h2><div id="tutText"></div><div id="tutTask"></div></div>
+    </div>
+    <div class="tutnav"><button class="btn" id="tutBack">Back</button><div class="row" id="tutRight"><button class="btn primary" id="tutNext">Next</button></div></div>
+  </div>
+</div>
+
+<!-- SONGBOOK -->
+<div class="tut hidden" id="songbook" role="dialog" aria-modal="true" aria-labelledby="sbTitle">
+  <div class="tutcard sbcard">
+    <div class="tuttop"><div><span class="muted" id="sbNow" style="font-size:.9rem"></span></div><button class="btn" id="sbClose">Close</button></div>
+    <div class="sbtabs" id="sbTabs" role="tablist"></div>
+    <h2 id="sbTitle"></h2><p class="muted" id="sbNote" style="margin:4px 0 14px"></p>
+    <div class="vox" id="sbVox"></div>
+    <div class="lyrics" id="sbText"></div>
+  </div>
+</div>
+
+<!-- VOCALS DOCK -->
+<div class="vdock hidden" id="vdock" role="region" aria-label="Sung versions player">
+  <div class="vdinner">
+    <div class="vdplayer" id="vdplayer"><div id="ytmount"></div></div><audio id="voxAudio" playsinline preload="auto"></audio>
+    <div class="vdinfo">
+      <strong id="vdTitle">Loading…</strong>
+      <span class="muted" id="vdSub" style="font-size:.85rem"></span>
+      <div class="row" style="margin-top:8px"><button class="btn" id="vdPause">Pause</button><button class="btn" id="vdNext">Next song</button><button class="btn" id="vdLyrics">Lyrics</button><button class="btn" id="vdOff">Stop vocals</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- DEBRIEF -->
+<section id="debrief" class="debrief hidden"></section>
+
+</div>
+<script>
+(function(){
+/* ============ utilities ============ */
+const rad=d=>d*Math.PI/180, deg=r=>r*180/Math.PI;
+const norm=a=>((a%360)+540)%360-180, wrap=a=>((a%360)+360)%360;
+const pad3=n=>String(Math.round(wrap(n))%360).padStart(3,'0');
+const fx=(n,d=1)=>n.toFixed(d);
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const mmss=s=>{s=Math.max(0,Math.round(s));return Math.floor(s/60)+':'+String(s%60).padStart(2,'0');};
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+function hash(s){let h=2166136261;for(const ch of s){h^=ch.charCodeAt(0);h=Math.imul(h,16777619);}return h>>>0;}
+const store={get(k,d){try{const v=localStorage.getItem(k);return v?JSON.parse(v):d;}catch(e){return d;}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}};
+
+/* ============ scenario archetypes ============ */
+const TICK=45, TMAX=80, T_UP=43, T_DN=150, R_MARK=0.05;
+const ARCH={
+ OSC:{shifty:1,name:'Oscillating breeze',brief:'The wind is swinging back and forth every few minutes around a steady average.',hint:'Tack on the headers, stay on the lifts. Compare TWD with the range the shift sectors show.',
+   lesson:'In an oscillating breeze the gains come from sailing lifted tacks. If you tacked late or stayed on headers, watch the TWD tile swing and act as it passes its average.',
+   gen:r=>({A:8+r()*5,P:6+r()*3,drift:0,noise:.6,tws:11+r()*4,twsVar:1.5,build:0,cur:.1+r()*.3,curRel:r()*360,turn:0})},
+ PRR:{shifty:1,name:'Persistent right shift',brief:'The breeze is steadily clocking to the right as the race goes on.',hint:'Sail toward the new wind: get to the right side early, and don\'t chase every small oscillation.',
+   lesson:'With a persistent shift, the boat closer to the new wind wins. Heading right early on port and then tacking onto the lifted starboard tack beats tacking on every header.',
+   gen:r=>({A:2+r()*2,P:6,drift:1+r()*.7,noise:.6,tws:10+r()*4,twsVar:1.2,build:0,cur:.2,curRel:r()*360,turn:0})},
+ PRL:{name:'Persistent left shift',brief:'The breeze is steadily backing to the left through the race.',hint:'Sail toward the new wind on the left. The early "header" on starboard is the trend, not noise.',
+   lesson:'A persistent left shift rewards the boat that goes left first. Tacking back too early to "play" the header gives the gain away.',
+   gen:r=>({A:2+r()*2,P:6,drift:-(1+r()*.7),noise:.6,tws:10+r()*4,twsVar:1.2,build:0,cur:.2,curRel:r()*360,turn:0})},
+ XTD:{name:'Cross-tide',brief:'A strong current is running across the course.',hint:'In this sim the dashed laylines are through the water. Before tacking for the mark, check that the orange COG marker on the new tack will reach the yellow dot.',
+   lesson:'Cross-current moves your ground-track laylines. Tacking when the dashed line hits the mark leaves you short on one side and overstood on the other. The COG marker is the truth.',
+   gen:r=>({A:3+r()*3,P:6,drift:0,noise:.6,tws:11+r()*4,twsVar:1.2,build:0,cur:1.2+r()*.6,curRel:(r()<.5?90:270)+(r()-.5)*40,turn:0})},
+ TTN:{shifty:1,name:'Tide turns',brief:'The current is running along the course now, but it will ease and reverse mid-race.',hint:'Keep checking the current arrow and COG. Your laylines on the second leg won\'t match the first.',
+   lesson:'A turning tide changes where the laylines are over the ground. Boats that re-check COG after the turn avoid overstanding.',
+   gen:r=>({A:4+r()*3,P:6,drift:0,noise:.7,tws:11+r()*3,twsVar:1.2,build:0,cur:1+r()*.5,curRel:(r()<.5?0:180)+(r()-.5)*50,turn:8+r()*6})},
+ GST:{name:'Gusty and shifty',brief:'Puffs roll through with irregular shifts, and pressure comes and goes quickly.',hint:'Shifts are short-lived. Only tack for a clear, lasting header, and keep the bow on target through the puffs.',
+   lesson:'In gusty, noisy wind, over-reacting costs more than it gains. Tack costs about 20 seconds; the shift needs to last to pay for it.',
+   gen:r=>({A:5,P:3+r()*1.5,drift:0,noise:2,tws:14+r()*4,twsVar:4,build:0,cur:.2+r()*.3,curRel:r()*360,turn:0})},
+ LGT:{shifty:1,name:'Light and fickle',brief:'Light wind with big, slow swings in direction.',hint:'Shifts are large, so each correct tack is worth a lot. Keep speed up: pinching in light air is expensive.',
+   lesson:'In light air, big shifts dominate and speed is fragile. Footing slightly to keep the boat moving usually beats pointing high.',
+   gen:r=>({A:10+r()*5,P:5+r()*3,drift:0,noise:1.2,tws:6+r()*2,twsVar:1.2,build:0,cur:.3+r()*.3,curRel:r()*360,turn:0})}
+};
+const KEYS=Object.keys(ARCH);
+
+function buildScenario(code){
+  code=code.toUpperCase().trim();
+  let [pre,num]=code.split('-');
+  if(!ARCH[pre]){pre=KEYS[hash(code)%KEYS.length];}
+  const r=mulberry32(hash(code));
+  const g=ARCH[pre].gen(r);
+  const base=Math.round(r()*360), phase=r()*Math.PI*2, gphase=r()*Math.PI*2, gP=4+r()*3;
+  const skew=(r()-.5)*16, L=.7+r()*.15;
+  const W=[]; let n=0;
+  for(let t=0;t<=TMAX+2;t++){
+    const tm=t*TICK/60;
+    n=n*.8+(r()-.5)*g.noise*1.6;
+    const twd=wrap(base+g.A*Math.sin(2*Math.PI*tm/g.P+phase)+g.drift*tm+n);
+    const tws=clamp(g.tws+g.twsVar*Math.sin(2*Math.PI*tm/gP+gphase)+(r()-.5)*g.twsVar*.6+g.build*tm,3.5,26);
+    let dr=g.cur;
+    if(g.turn) dr=g.cur*(1-2*clamp((tm-(g.turn-4))/8,0,1));
+    let set=wrap(base+g.curRel); if(dr<0){set=wrap(set+180);dr=-dr;}
+    W.push({twd,tws,set,drift:dr});
+  }
+  const mb=wrap(base+skew);
+  const mark={x:L*Math.sin(rad(mb)),y:L*Math.cos(rad(mb))};
+  /* puffs (darker, more wind) and lulls drift down the course; every code gets the same ones */
+  const PF={GST:[26,3,6,.25],LGT:[18,1.5,3,.45],PRR:[12,2,4,.3],PRL:[12,2,4,.3]}[pre]||[16,2,4.5,.3];
+  const puffs=[],ux=Math.sin(rad(mb)),uy=Math.cos(rad(mb)),px=Math.cos(rad(mb)),py=-Math.sin(rad(mb));
+  for(let i=0;i<PF[0];i++){
+    const lull=r()<PF[3],u=-.15+r()*1.3,v=(r()-.5)*.9,tm=r()*TMAX;
+    puffs.push({x:(ux*u+px*v)*L,y:(uy*u+py*v)*L,tm,life:10+r()*10,r:.1+r()*.12,s:lull?-(1.5+r()*(PF[2]*.45)):PF[1]+r()*(PF[2]-PF[1]),sh:(r()-.5)*7,spd:g.tws*.8});
+  }
+  return {code:pre+'-'+(num||'0000'),arch:pre,A:ARCH[pre],W,mark,finish:{x:0,y:0},L,base,puffs};
+}
+
+/* ============ boat model ============ */
+const PT=[[0,0],[25,.6],[30,3],[35,4.6],[40,5.6],[43,6],[45,6.2],[50,6.5],[60,6.9],[75,7.2],[90,7.3],[110,7.3],[130,7.1],[140,6.8],[150,6.3],[160,5.4],[170,4.6],[180,4.2]];
+function polar(a){a=clamp(Math.abs(a),0,180);for(let i=1;i<PT.length;i++){if(a<=PT[i][0]){const[a0,v0]=PT[i-1],[a1,v1]=PT[i];return v0+(v1-v0)*(a-a0)/(a1-a0);}}return 4.2;}
+const wf=tws=>clamp(.3+tws/17,.35,1.12);
+/* Real boats point higher and run deeper as the breeze builds, and sail lower and hotter in light air. */
+const desUp=tws=>clamp(47-(tws-6)*.45,38,47), desDn=tws=>clamp(138+(tws-6)*2.2,136,172);
+function boatSpeed(twa,tws){
+  let a=Math.abs(norm(twa));const du=desUp(tws),dd=desDn(tws);
+  if(a<=90)a=a<=du?a*43/du:43+(a-du)*47/(90-du);
+  else a=a>=dd?150+(a-dd)*30/(180-dd):90+(a-90)*60/(dd-90);
+  return polar(a)*wf(tws);
+}
+const TGT=[];for(let s=0;s<=30;s++){let bu=43,vu=-1,bd=150,vd=-1;const ss=Math.max(s,1);
+  for(let a=30;a<=70;a+=.5){const v=boatSpeed(a,ss)*Math.cos(rad(a));if(v>vu){vu=v;bu=a;}}
+  for(let a=110;a<=180;a+=.5){const v=-boatSpeed(a,ss)*Math.cos(rad(a));if(v>vd){vd=v;bd=a;}}
+  TGT.push([Math.round(bu),Math.round(bd)]);}
+const targets=tws=>TGT[clamp(Math.round(tws),0,30)];
+function vel(h,bsp,w){
+  const vx=bsp*Math.sin(rad(h))+w.drift*Math.sin(rad(w.set));
+  const vy=bsp*Math.cos(rad(h))+w.drift*Math.cos(rad(w.set));
+  return {vx,vy,cog:wrap(deg(Math.atan2(vx,vy))),sog:Math.hypot(vx,vy)};
+}
+/* ---- local wind: base breeze + drifting puffs/lulls + dirty air from other boats ---- */
+function puffPos(sc,p,t){const dir=rad(sc.base+180),d=p.spd*TICK/3600*(t-p.tm);return {x:p.x+Math.sin(dir)*d,y:p.y+Math.cos(dir)*d};}
+const puffEnv=(p,t)=>Math.abs(t-p.tm)>=p.life/2?0:Math.cos(Math.PI*(t-p.tm)/p.life);
+function puffAt(sc,t,x,y){let ds=0,dd=0;if(!sc.puffs)return {ds,dd};
+  for(const p of sc.puffs){const e=puffEnv(p,t);if(e<=0)continue;const c=puffPos(sc,p,t),d2=(x-c.x)**2+(y-c.y)**2;if(d2>p.r*p.r*3)continue;const f=e*Math.exp(-d2/(p.r*p.r));ds+=p.s*f;dd+=p.sh*f;}
+  return {ds:clamp(ds,-4,6),dd:clamp(dd,-5,5)};}
+const SHADE_LEN=.1,SHADE_ANG=22;
+function shadeAt(sc,x,y,self,twd){let f=0,id=null;if(!sc.snap)return {f,id};
+  for(const o of sc.snap){if(o.id===self)continue;const dx=x-o.x,dy=y-o.y,d=Math.hypot(dx,dy);if(d<.003||d>SHADE_LEN)continue;
+    const ang=Math.abs(norm(deg(Math.atan2(dx,dy))-(twd+180)));if(ang>SHADE_ANG)continue;
+    const v=.32*(1-d/SHADE_LEN)*(1-ang/SHADE_ANG);if(v>f){f=v;id=o.id;}}
+  return {f,id};}
+function windAt(sc,t,x,y,self){
+  const W=sc.W[clamp(t,0,sc.W.length-1)],pf=puffAt(sc,t,x,y),twd=wrap(W.twd+pf.dd);
+  let tws=Math.max(2.5,W.tws+pf.ds);const sh=shadeAt(sc,x,y,self,twd);tws*=1-sh.f;
+  const [tu,td]=targets(tws);
+  return {twd,tws,set:W.set,drift:W.drift,tu,td,puff:pf.ds,shade:sh.f,shadeBy:sh.id,base:W};
+}
+const WB=(sc,b)=>windAt(sc,b.t,b.x,b.y,b.id);
+function newBoat(sc,o){
+  o=o||{};const x=o.x||0,y=o.y||0,w=windAt(sc,0,x,y,o.id);
+  const b={id:o.id||'you',name:o.name||'You',perf:o.perf||1,offset:0,mode:'angle',t:0,x,y,leg:0,hdg:wrap(w.twd-w.tu),bsp:0,track:[[x,y]],tacks:0,lastTack:-9,done:false,finish:null,rounds:[],penalty:1};
+  b.bsp=boatSpeed(w.tu,w.tws);
+  return b;
+}
+const markOf=(sc,b)=>b.leg===0?sc.mark:sc.finish;
+const upwindLeg=b=>b.upw!==undefined?b.upw:b.leg===0;
+/* upwind or downwind is decided by where the mark actually is, so overshooting a mark still gives you the right tack/gybe angles */
+function setUpw(sc,b){const w=sc.W[Math.min(b.t,sc.W.length-1)];const m=markOf(sc,b);b.upw=Math.abs(norm(wrap(deg(Math.atan2(m.x-b.x,m.y-b.y)))-w.twd))<90;}
+function brgDist(sc,b){const m=markOf(sc,b),dx=m.x-b.x,dy=m.y-b.y;return {brg:wrap(deg(Math.atan2(dx,dy))),dist:Math.hypot(dx,dy)};}
+const tackOf=(b,w)=>norm(w.twd-b.hdg)>=0?'stbd':'port';
+const sgn=k=>k==='stbd'?-1:1;
+function targetHdg(k,w,up){return wrap(w.twd+sgn(k)*(up?w.tu:w.td));}
+
+function applyAction(sc,b,act){
+  const w=WB(sc,b), k=tackOf(b,w), up=upwindLeg(b);
+  b.penalty=1;
+  if(act==='up') b.hdg=wrap(b.hdg-sgn(k)*5);
+  else if(act==='down') b.hdg=wrap(b.hdg+sgn(k)*5);
+  else if(act==='tack'){const nk=k==='stbd'?'port':'stbd';b.hdg=targetHdg(nk,w,up);b.penalty=up?.55:.72;b.tacks++;b.lastTack=b.t;}
+  else if(typeof act==='number') b.hdg=wrap(act);
+}
+function sail(sc,b){
+  const w=WB(sc,b);
+  const twa=Math.abs(norm(w.twd-b.hdg));
+  let sp=boatSpeed(twa,w.tws)*(b.perf||1);
+  if(twa<25) sp=.3;
+  sp*=b.penalty; b.bsp=sp;b.lastShade=w.shade;b.lastShadeBy=w.shadeBy;
+  const v=vel(b.hdg,sp,w), dt=TICK/3600;
+  const x0=b.x,y0=b.y,x1=x0+v.vx*dt,y1=y0+v.vy*dt;
+  b.seg=[x0,y0,x1,y1];
+  const m=markOf(sc,b), dx=x1-x0, dy=y1-y0, L2=dx*dx+dy*dy||1e-9;
+  const u=clamp(((m.x-x0)*dx+(m.y-y0)*dy)/L2,0,1);
+  const cx=x0+u*dx, cy=y0+u*dy, ev=[];
+  if(Math.hypot(m.x-cx,m.y-cy)<=R_MARK){
+    const tsec=(b.t+u)*TICK;
+    if(b.leg===0){
+      b.leg=1;b.rounds.push(tsec);ev.push({type:'round',t:tsec});
+      b.x=cx;b.y=cy;b.track.push([cx,cy]);
+      const kk=tackOf(b,w);b.hdg=targetHdg(kk,w,false);
+      const rest=1-u,vv=vel(b.hdg,boatSpeed(w.td,w.tws)*(b.perf||1),w);b.x+=vv.vx*dt*rest;b.y+=vv.vy*dt*rest;
+    } else {b.done=true;b.finish=tsec;b.x=cx;b.y=cy;ev.push({type:'finish',t:tsec});}
+  } else {b.x=x1;b.y=y1;}
+  b.track.push([b.x,b.y]);
+  b.t++;
+  if(!b.done)setUpw(sc,b);
+  if(!b.done&&b.t>=TMAX){b.done=true;b.finish=null;ev.push({type:'dnf'});}
+  return ev;
+}
+
+/* ============ analysis ============ */
+function windStats(sc,t,win){
+  const cur=sc.W[t].twd;let s=0,mn=0,mx=0,c=0;
+  for(let k=Math.max(0,t-win+1);k<=t;k++){const r=norm(sc.W[k].twd-cur);s+=r;c++;mn=Math.min(mn,r);mx=Math.max(mx,r);}
+  return {meanRel:s/c,lo:mn,hi:mx};
+}
+function layInfo(sc,b){
+  const w=WB(sc,b), up=upwindLeg(b), T=up?w.tu:w.td, {brg,dist}=brgDist(sc,b), out={};
+  for(const k of ['stbd','port']){
+    const h=targetHdg(k,w,up), v=vel(h,boatSpeed(T,w.tws),w), s=sgn(k);
+    const am=s*norm(brg-w.twd), ac=s*norm(v.cog-w.twd);
+    const margin=up?am-ac:ac-am;
+    out[k]={lay:am>0&&margin>=-1,margin,cog:v.cog};
+  }
+  return {...out,brg,dist,up};
+}
+function headingForCog(brg,bsp,w){let h=brg;for(let i=0;i<6;i++){h=wrap(h+norm(brg-vel(h,bsp,w).cog));}return h;}
+function shiftState(sc,b){
+  const w=WB(sc,b), ws=windStats(sc,b.t,10), shift=norm(w.twd-w.base.twd)-ws.meanRel, k=tackOf(b,w), up=upwindLeg(b);
+  const bad=up?(k==='stbd'?-shift:shift):(k==='stbd'?shift:-shift);
+  return {shift,bad,k};
+}
+
+/* ghost: ideal helm, rule-based tactics */
+function vmgMark(sc,b,k){const w=WB(sc,b),up=upwindLeg(b),T=up?w.tu:w.td,h=targetHdg(k,w,up),v=vel(h,boatSpeed(T,w.tws),w),{brg}=brgDist(sc,b);return v.sog*Math.cos(rad(v.cog-brg));}
+function ghostDecide(sc,G){
+  const w=WB(sc,G), up=upwindLeg(G), k=tackOf(G,w), oth=k==='stbd'?'port':'stbd';
+  const li=layInfo(sc,G);
+  if(li[k].lay){const T=up?w.tu:w.td;return headingForCog(li.brg,boatSpeed(T,w.tws),w);}
+  if(li[oth].lay) return 'tack';
+  if(sc.A.shifty&&G.t-G.lastTack>=3){const vc=vmgMark(sc,G,k),vo=vmgMark(sc,G,oth);if(vo>vc*1.4) return 'tack';}
+  return targetHdg(k,w,up);
+}
+function runGhost(sc){
+  const keep=sc.snap;sc.snap=null;
+  const G=newBoat(sc,{id:'ghost'}), states=[{x:0,y:0,hdg:G.hdg,leg:0}];
+  while(!G.done){applyAction(sc,G,ghostDecide(sc,G));sail(sc,G);states.push({x:G.x,y:G.y,hdg:G.hdg,leg:G.leg});}
+  sc.snap=keep;
+  return {G,states};
+}
+
+/* ============ fleet (Master mode) ============ */
+const FLEET_NAMES=['Osprey','Kestrel','Squall','Wahoo','Petrel'];
+const FLEET_COLORS=['#C8323C','#7A4FB5','#2E8B57','#D07A1F','#3D7DB5'];
+function makeFleet(sc){
+  const r=mulberry32(hash(sc.code+'#fleet')),fl=[],lineDir=rad(sc.base+90);
+  sc.frng=r;
+  for(let i=0;i<5;i++){
+    const side=i%2?1:-1,d=(Math.floor(i/2)+1)*.035*side+(r()-.5)*.01,back=(r()-.5)*.02;
+    const x=Math.sin(lineDir)*d-Math.sin(rad(sc.base))*Math.abs(back),y=Math.cos(lineDir)*d-Math.cos(rad(sc.base))*Math.abs(back);
+    const b=newBoat(sc,{x,y,id:'ai'+i,name:FLEET_NAMES[i],perf:.975+r()*.03});
+    b.color=FLEET_COLORS[i];
+    b.pers={thr:3+r()*4,over:r()*3,noise:.4+r()*2,shifty:r()<.75};
+    if(r()<.5)b.hdg=targetHdg('port',windAt(sc,0,x,y,b.id),true);
+    fl.push(b);
+  }
+  return fl;
+}
+function snapFleet(sc,boats){sc.snap=boats.filter(b=>!b.done).map(b=>({id:b.id,x:b.x,y:b.y,hdg:b.hdg,bsp:b.bsp||5,k:tackOf(b,WB(sc,b))}));}
+function segMin(a,b){ /* closest approach of two boats moving linearly over the same tick */
+  const px=a[0]-b[0],py=a[1]-b[1],vx=(a[2]-a[0])-(b[2]-b[0]),vy=(a[3]-a[1])-(b[3]-b[1]),vv=vx*vx+vy*vy;
+  const s=vv<1e-12?0:clamp(-(px*vx+py*vy)/vv,0,1);return Math.hypot(px+vx*s,py+vy*s);}
+function predictSeg(sc,b,hdg){const w=WB(sc,b),twa=Math.abs(norm(w.twd-hdg)),sp=twa<25?.3:boatSpeed(twa,w.tws),v=vel(hdg,sp,w),dt=TICK/3600;return [b.x,b.y,b.x+v.vx*dt,b.y+v.vy*dt];}
+function aiDecide(sc,a,others){
+  const w=WB(sc,a),up=upwindLeg(a),k=tackOf(a,w),oth=k==='stbd'?'port':'stbd',li=layInfo(sc,a),p=a.pers,r=sc.frng;
+  let act;
+  if(li[k].lay){const T=up?w.tu:w.td;act=headingForCog(li.brg,boatSpeed(T,w.tws),w);}
+  else if(li[oth].lay&&li[oth].margin>=p.over)act='tack';
+  else{
+    const ss=shiftState(sc,a);
+    if(p.shifty&&ss.bad>p.thr&&a.t-a.lastTack>=3)act='tack';
+    else if(w.shade>.12&&a.t-a.lastTack>=3&&r()<.5)act='tack';
+    else act=wrap(targetHdg(k,w,up)+(r()-.5)*2*p.noise);
+  }
+  /* port gives way to starboard: duck behind a starboard boat if a collision is coming */
+  if(act!=='tack'&&k==='port'){
+    const h=typeof act==='number'?act:a.hdg,seg=predictSeg(sc,a,h);
+    for(const o of others){if(o===a||o.done)continue;const wo=WB(sc,o);if(tackOf(o,wo)!=='stbd')continue;
+      if(segMin(seg,predictSeg(sc,o,o.hdg))<.02){act=wrap(h+sgn(k)*12);a.ducks=(a.ducks||0)+1;break;}}
+  }
+  return act;
+}
+function standing(sc,boats){
+  const prog=b=>b.done?(b.finish?-1e6+b.finish:1e6):remaining(sc,b.x,b.y,b.leg);
+  return boats.slice().sort((x,y)=>prog(x)-prog(y));
+}
+function remaining(sc,x,y,leg){
+  const m=leg===0?sc.mark:sc.finish;const d=Math.hypot(m.x-x,m.y-y);return d+(leg===0?sc.L:0);
+}
+
+/* ============ dial ============ */
+const C=200,RING=160;
+function compute(p){
+  const twa=norm(p.twd-p.hdg), tack=twa>=0?'stbd':'port', absT=Math.abs(twa);
+  const upwind=p.up!==undefined?p.up:absT<90, T=upwind?p.tUp:p.tDn;
+  const hPort=wrap(p.twd+T),hStbd=wrap(p.twd-T);
+  const th=rad(twa), ax=p.tws*Math.cos(th)+p.bsp, ay=p.tws*Math.sin(th);
+  const awa=deg(Math.atan2(ay,ax));
+  const v=vel(p.hdg,p.bsp,{set:p.set,drift:p.drift});
+  const err=absT-T, reaching=upwind?err>25:err<-35, onTarget=!reaching&&Math.abs(err)<10;
+  return {twa,tack,absT,upwind,T,hPort,hStbd,awa,cog:v.cog,sog:v.sog,cogOff:norm(v.cog-p.hdg),err,reaching,onTarget};
+}
+function pt(b,r,h){const sa=rad(norm(b-h));return [C+r*Math.sin(sa),C-r*Math.cos(sa)];}
+const f1=n=>n.toFixed(1);
+function wedge(b1,b2,r1,r2,h){
+  const [x1,y1]=pt(b1,r2,h),[x2,y2]=pt(b2,r2,h),[x3,y3]=pt(b2,r1,h),[x4,y4]=pt(b1,r1,h);
+  return `M${f1(x1)} ${f1(y1)}A${r2} ${r2} 0 0 1 ${f1(x2)} ${f1(y2)}L${f1(x3)} ${f1(y3)}A${r1} ${r1} 0 0 0 ${f1(x4)} ${f1(y4)}Z`;
+}
+function windArrow(b,h,fill,letter){
+  const tip=pt(b,163,h),l=pt(b-5,191,h),r=pt(b+5,191,h),lab=pt(b,181,h);
+  return `<polygon points="${f1(tip[0])},${f1(tip[1])} ${f1(l[0])},${f1(l[1])} ${f1(r[0])},${f1(r[1])}" fill="${fill}" stroke="#0F2233"/><text x="${f1(lab[0])}" y="${f1(lab[1]+4)}" text-anchor="middle" font-size="12" font-weight="700" fill="#0F2233" font-family="Barlow,sans-serif">${letter}</text>`;
+}
+function renderDial(el,p){
+  const c=compute(p),h=p.hdg;
+  let s=`<svg class="dial" viewBox="0 0 400 400" role="img" aria-label="SailSteer display. Heading ${pad3(h)}, true wind angle ${Math.round(c.absT)} ${c.tack==='stbd'?'starboard':'port'}, mark bearing ${pad3(p.wpt)}">`;
+  s+=`<circle cx="${C}" cy="${C}" r="${RING}" fill="none" stroke="#4A6479" stroke-width="1.5"/>`;
+  for(let b=0;b<360;b+=5){
+    const len=b%30===0?12:(b%10===0?8:4),a=pt(b,RING,h),z=pt(b,RING-len,h);
+    s+=`<line x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(z[0])}" y2="${f1(z[1])}" stroke="#9FB4C3" stroke-width="${b%30===0?1.6:1}"/>`;
+    if(b%30===0){const t=pt(b,RING-24,h);s+=`<text x="${f1(t[0])}" y="${f1(t[1]+4)}" text-anchor="middle" font-size="11" fill="#C9D6DF" font-family="Barlow Condensed,sans-serif" font-weight="600">${b}</text>`;}
+  }
+  const lo=p.secLo||0,hi=p.secHi||0;
+  if(hi-lo>0.5){
+    s+=`<path d="${wedge(c.hPort+lo,c.hPort+hi,92,124,h)}" fill="#D2414B" fill-opacity=".5"/><path d="${wedge(c.hStbd+lo,c.hStbd+hi,92,124,h)}" fill="#22A060" fill-opacity=".5"/>`;
+  }
+  const lp=(b,col)=>{const a=pt(b,28,h),z=pt(b,126,h);return `<line x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(z[0])}" y2="${f1(z[1])}" stroke="${col}" stroke-width="2.6" stroke-dasharray="7 5" stroke-linecap="round"/>`;};
+  s+=lp(c.hPort,'#FF6A73')+lp(c.hStbd,'#3FD68A');
+  s+=`<path d="M200 132C224 166 228 214 219 262L181 262C172 214 176 166 200 132Z" fill="rgba(232,238,242,.06)" stroke="#E8EEF2" stroke-width="2"/><line x1="200" y1="132" x2="200" y2="40" stroke="#E8EEF2" stroke-opacity=".35"/>`;
+  if(p.drift>=0.05){
+    const a=pt(p.set+180,36,h),z=pt(p.set,36,h),l=pt(p.set-18,24,h),r=pt(p.set+18,24,h),lb=pt(p.set+90,20,h);
+    s+=`<line x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(z[0])}" y2="${f1(z[1])}" stroke="#5AB0F0" stroke-width="4" stroke-linecap="round"/><polygon points="${f1(z[0])},${f1(z[1])} ${f1(l[0])},${f1(l[1])} ${f1(r[0])},${f1(r[1])}" fill="#5AB0F0"/><text x="${f1(lb[0])}" y="${f1(lb[1]+5)}" text-anchor="middle" font-size="14" font-weight="700" fill="#9FD3FA" stroke="#0F2233" stroke-width="4" paint-order="stroke" font-family="Barlow Condensed,sans-serif">${fx(p.drift)}</text>`;
+  }
+  const w=pt(p.wpt,RING,h);
+  s+=`<circle cx="${f1(w[0])}" cy="${f1(w[1])}" r="7.5" fill="#F2C230" stroke="#0F2233" stroke-width="1.5"/>`;
+  const g=pt(c.cog,RING,h),ga=norm(c.cog-h);
+  s+=`<g transform="translate(${f1(g[0])} ${f1(g[1])}) rotate(${f1(ga)})"><path d="M-7 -11L7 -11L0 0ZM-7 11L7 11L0 0Z" fill="#F08A2C" stroke="#0F2233"/></g>`;
+  s+=windArrow(wrap(h+c.awa),h,'#8FDCEB','A');
+  s+=windArrow(p.twd,h,c.onTarget?'#35C77A':'#4C86E6','T');
+  s+=`<polygon points="194,34 206,34 200,42" fill="#F2F6F8"/><rect x="172" y="6" width="56" height="26" rx="4" fill="#F2F6F8"/><text x="200" y="25" text-anchor="middle" font-size="18" font-weight="700" fill="#0F2233" font-family="Barlow Condensed,sans-serif">${pad3(h)}°</text>${(p.hl||[]).map(q=>`<circle class="hlring" cx="${f1(q.x)}" cy="${f1(q.y)}" r="${q.r||16}"/>`).join('')}</svg>`;
+  const side=c.tack==='stbd'?'S':'P';
+  const tiles=[['BSP',fx(p.bsp)+' kn'],['TWA',Math.round(c.absT)+'° '+side],['AWA',Math.round(Math.abs(c.awa))+'° '+side],['TWS',Math.round(p.tws)+' kn'],['TWD',pad3(p.twd)+'°'],
+    ['HDG',pad3(h)+'°'],['COG',pad3(c.cog)+'°'],['SOG',fx(c.sog)+' kn'],['DTW',fx(p.dtw,2)+' nm'],['WPT BRG',pad3(p.wpt)+'°']];
+  s+=`<div class="tiles">${tiles.map(t=>`<div class="tile${(p.hlTiles||[]).includes(t[0])?' hltile':''}"><b>${t[1]}</b><span>${t[0]}</span></div>`).join('')}</div>`;
+  el.innerHTML=s;
+}
+
+/* ============ map ============ */
+function renderMap(el,sc,P,gs,opts){
+  const fl=opts.fleet||[];
+  const pts=[[0,0],[sc.mark.x,sc.mark.y],...P.track];
+  if(opts.ghost) gs.slice(0,opts.gUpto+1).forEach(g=>pts.push([g.x,g.y]));
+  fl.forEach(b=>pts.push([b.x,b.y]));
+  let x0=Math.min(...pts.map(p=>p[0])),x1=Math.max(...pts.map(p=>p[0])),y0=Math.min(...pts.map(p=>p[1])),y1=Math.max(...pts.map(p=>p[1]));
+  const span=Math.max(x1-x0,y1-y0,.5)*1.18, cx=(x0+x1)/2, cy=(y0+y1)/2;
+  const S=300/span, X=x=>150+(x-cx)*S, Y=y=>150-(y-cy)*S;
+  const poly=a=>a.map(p=>f1(X(p[0]))+','+f1(Y(p[1]))).join(' ');
+  const boat=(x,y,hd,cls,fill)=>`<g transform="translate(${f1(X(x))} ${f1(Y(y))}) rotate(${f1(hd)})"><path d="M0 -8L5 6L-5 6Z" class="${cls}"${fill?` style="fill:${fill}"`:''}/></g>`;
+  const t=opts.t!==undefined?opts.t:Math.min(P.t,TMAX),W=sc.W[Math.min(t,sc.W.length-1)];
+  let s=`<svg class="map" viewBox="0 0 300 300" role="img" aria-label="Course map"><defs><clipPath id="mclip"><rect width="300" height="300" rx="12"/></clipPath>
+    <radialGradient id="gpf"><stop offset="0" stop-opacity=".55" style="stop-color:var(--puff)"/><stop offset="1" stop-opacity="0" style="stop-color:var(--puff)"/></radialGradient>
+    <radialGradient id="gll"><stop offset="0" stop-opacity=".6" style="stop-color:var(--lull)"/><stop offset="1" stop-opacity="0" style="stop-color:var(--lull)"/></radialGradient></defs>
+    <rect class="water" width="300" height="300" rx="12"/><g clip-path="url(#mclip)">`;
+  /* puffs (dark) and lulls (pale) drifting down the course */
+  if(opts.puffs!==false&&sc.puffs)sc.puffs.forEach(p=>{const e=puffEnv(p,t);if(e<=.05)return;const c=puffPos(sc,p,t),rr=p.r*S*1.5;
+    s+=`<circle cx="${f1(X(c.x))}" cy="${f1(Y(c.y))}" r="${f1(rr)}" fill="url(#${p.s>0?'gpf':'gll'})" opacity="${(Math.min(1,Math.abs(p.s)/4)*e).toFixed(2)}"/>`;});
+  /* wind shadows behind fleet boats */
+  fl.forEach(b=>{if(b.done)return;const w=windAt(sc,t,b.x,b.y,b.id),d=wrap(w.twd+180),pA=[b.x,b.y],L=SHADE_LEN;
+    const q1=[b.x+L*Math.sin(rad(d-SHADE_ANG)),b.y+L*Math.cos(rad(d-SHADE_ANG))],q2=[b.x+L*Math.sin(rad(d+SHADE_ANG)),b.y+L*Math.cos(rad(d+SHADE_ANG))];
+    s+=`<polygon class="shade" points="${poly([pA,q1,q2])}"/>`;});
+  if(opts.laylines){
+    const m=markOf(sc,P), up=upwindLeg(P), w=WB(sc,P);
+    for(const k of ['stbd','port']){const hd=wrap(targetHdg(k,w,up)+180);const ex=m.x+1.2*Math.sin(rad(hd)),ey=m.y+1.2*Math.cos(rad(hd));s+=`<line class="lay" x1="${f1(X(m.x))}" y1="${f1(Y(m.y))}" x2="${f1(X(ex))}" y2="${f1(Y(ey))}"/>`;}
+  }
+  s+=`<circle cx="${f1(X(sc.mark.x))}" cy="${f1(Y(sc.mark.y))}" r="6" fill="#F2C230" stroke="#0F2233"/><text class="lbl" x="${f1(X(sc.mark.x)+9)}" y="${f1(Y(sc.mark.y)+4)}">Windward</text>`;
+  s+=`<rect x="${f1(X(0)-6)}" y="${f1(Y(0)-6)}" width="12" height="12" fill="#F08A2C" stroke="#0F2233"/><text class="lbl" x="${f1(X(0)+9)}" y="${f1(Y(0)+4)}">Start / finish</text>`;
+  if(opts.ghost){const g=gs.slice(0,opts.gUpto+1);s+=`<polyline class="gtrk" points="${poly(g.map(p=>[p.x,p.y]))}"/>`;const last=g[g.length-1];s+=boat(last.x,last.y,last.hdg,'gh');}
+  fl.forEach(b=>{if(opts.fleetTracks)s+=`<polyline points="${poly(b.track)}" style="fill:none;stroke:${b.color};stroke-width:1.3;opacity:.55"/>`;
+    s+=boat(b.x,b.y,b.hdg,'',b.color)+`<text class="flbl" x="${f1(X(b.x)+7)}" y="${f1(Y(b.y)-6)}" style="fill:${b.color}">${b.name}</text>`;});
+  s+=`<polyline class="trk" points="${poly(P.track)}"/>`+boat(P.x,P.y,P.hdg,'you');
+  const wd=wrap(W.twd+180);
+  s+=`</g><g transform="translate(34 36) rotate(${f1(wd)})"><line class="wind" x1="0" y1="-16" x2="0" y2="14"/><path d="M-5 8L0 16L5 8" class="wind"/></g><text class="lbl" x="18" y="68">Wind ${pad3(W.twd)}° ${Math.round(W.tws)} kn</text>`;
+  if(opts.legend!==false)s+=`<g transform="translate(206 272)"><circle r="7" cx="7" cy="0" fill="url(#gpf)"/><text class="lbl" x="17" y="3">puff</text><circle r="7" cx="52" cy="0" fill="url(#gll)" stroke="var(--rule)" stroke-width=".5"/><text class="lbl" x="62" y="3">lull</text></g>`;
+  s+=`</svg>`;
+  el.innerHTML=s;
+}
+
+/* ============ app state ============ */
+let FLEET=null;
+let diff=store.get('ssim-diff','club'), sc=null, P=null, ghost=null, evals=null, timerId=null, deadline=0, busy=false;
+const $=id=>document.getElementById(id);
+const codeIn=$('code');
+function randomCode(){return KEYS[Math.floor(Math.random()*KEYS.length)]+'-'+String(Math.floor(Math.random()*10000)).padStart(4,'0');}
+function dailyCode(){const d=new Date(),n=d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate();return KEYS[n%KEYS.length]+'-'+String(n%10000).padStart(4,'0');}
+const ordinal=n=>n+(['th','st','nd','rd'][(n%100>10&&n%100<14)?0:n%10<4?n%10:0]||'th');
+function setDiff(d){diff=d;store.set('ssim-diff',d);$('diff').querySelectorAll('button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.d===d?'true':'false'));showBrief();}
+$('diff').addEventListener('click',e=>{const b=e.target.closest('button');if(b)setDiff(b.dataset.d);});
+$('randBtn').onclick=()=>{codeIn.value=randomCode();showBrief();};
+$('dailyBtn').onclick=()=>{codeIn.value=dailyCode();showBrief();};
+codeIn.addEventListener('input',showBrief);
+
+function showBrief(){
+  const s=buildScenario(codeIn.value||'OSC-0001');
+  const res=store.get('ssim-results',[]);
+  const mine=res.filter(r=>r.code===s.code&&r.diff===diff&&r.time);
+  const best=mine.length?Math.min(...mine.map(r=>r.time)):null;
+  const w=s.W[0];
+  let h=`<span class="code">${s.code}</span><h2>${s.A.name}</h2>`;
+  if(diff!=='pro'){h+=`<p>${s.A.brief}</p><p class="muted" style="font-size:.95rem">Start: wind about ${pad3(w.twd)}° at ${Math.round(w.tws)} kn. Windward mark ${fx(s.L,2)} nm upwind, then back to finish.</p>`;}
+  else h+=`<p class="muted">Tactician mode: no briefing. Read it off the display.</p>`;
+  if(diff==='easy') h+=`<div class="hint"><strong>Coach's tip:</strong> ${s.A.hint}</div>`;
+  if(diff==='master') h+=`<div class="hint"><strong>Fleet race:</strong> you start on a line with Osprey, Kestrel, Squall, Wahoo and Petrel. Stay out of the shaded wind shadows behind boats, and on port tack give way to anyone on starboard or take a penalty. Your grade is your finishing place.</div>`;
+  h+=`<p style="margin-top:10px">${best?`Your best here on this difficulty: <strong>${mmss(best)}</strong>`:'No finish recorded here on this difficulty yet.'}</p>`;
+  if(res.length){h+=`<div class="history"><table><tr><th>Code</th><th>Level</th><th>Time</th><th>Result</th><th>Grade</th></tr>${res.slice(-5).reverse().map(r=>`<tr><td>${r.code}</td><td>${{easy:'Deckhand',club:'Navigator',pro:'Tactician',master:'Master'}[r.diff]}</td><td>${r.time?mmss(r.time):'DNF'}</td><td>${r.place?ordinal(r.place)+' of 6':(r.time?(r.delta>=0?'+':'−')+mmss(Math.abs(r.delta)):'–')}</td><td>${r.grade}</td></tr>`).join('')}</table></div>`;}
+  $('brief').innerHTML=h;
+}
+
+/* ============ race loop ============ */
+function start(){
+  if(!codeIn.value) codeIn.value=randomCode();
+  sc=buildScenario(codeIn.value); codeIn.value=sc.code;
+  ghost=runGhost(sc); P=newBoat(sc);
+  FLEET=diff==='master'?makeFleet(sc):null;sc.snap=null;
+  evals={pinch:0,foot:0,lifted:0,headed:0,past:0,tackLift:0,missed:0,ticks:0,upTicks:0,shade:0,fouls:0,puff:0,lull:0};
+  $('sGhostL').textContent=FLEET?'Place':'Ghost';$('fleetMsg').classList.add('hidden');
+  $('log').innerHTML='';
+  $('setup').classList.add('hidden');$('debrief').classList.add('hidden');$('race').classList.remove('hidden');
+  $('coach').classList.toggle('hidden',diff!=='easy');
+  $('mapPanel').classList.toggle('hidden',diff==='pro');
+  $('timer').classList.toggle('hidden',diff!=='pro');
+  logMsg(FLEET?`Start: ${sc.A.name}. Fleet race against 5 boats.`:`Start: ${sc.A.name}. Sailing on starboard.`);
+  draw(); armTimer();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function logMsg(m,cls=''){const li=document.createElement('li');li.textContent=`${mmss(P.t*TICK)}  ${m}`;if(cls)li.className=cls;$('log').prepend(li);}
+
+function displayParams(){
+  if(FLEET)snapFleet(sc,[P,...FLEET]);
+  const w=WB(sc,P), {brg,dist}=brgDist(sc,P), ws=windStats(sc,P.t,8);
+  const j=diff==='pro'?()=> (Math.random()-.5)*4:()=>0;
+  return {hdg:wrap(P.hdg+j()),twd:wrap(w.twd+j()),tws:w.tws,bsp:P.bsp||boatSpeed(Math.abs(norm(w.twd-P.hdg)),w.tws),set:w.set,drift:w.drift,wpt:brg,dtw:dist,secLo:ws.lo,secHi:ws.hi,tUp:w.tu,tDn:w.td,up:upwindLeg(P)};
+}
+function draw(){
+  const up=upwindLeg(P);
+  renderDial($('dial'),displayParams());
+  $('sLeg').textContent=up?'Beat':'Run';
+  $('sTime').textContent=mmss(P.t*TICK);
+  $('sDtw').textContent=fx(brgDist(sc,P).dist,2);
+  const gi=Math.min(P.t,ghost.states.length-1), g=ghost.states[gi];
+  if(FLEET){const st=standing(sc,[P,...FLEET]),pl=st.indexOf(P)+1;$('sGhost').textContent=ordinal(pl)+' / 6';$('sGhost').style.color=pl<=2?'var(--good)':pl>=5?'var(--bad)':'';fleetWarn();}
+  else if(diff==='pro') $('sGhost').textContent='hidden';
+  else{
+    const gRem=ghost.G.done&&P.t>=ghost.states.length-1?0:remaining(sc,g.x,g.y,g.leg);
+    const gap=(remaining(sc,P.x,P.y,P.leg)-gRem)/5*3600;
+    $('sGhost').textContent=Math.abs(gap)<5?'even':(gap>0?'+':'−')+mmss(Math.abs(gap));
+    $('sGhost').style.color=gap>5?'var(--bad)':gap<-5?'var(--good)':'';
+  }
+  $('aTack').firstChild.textContent=up?'Tack':'Gybe';
+  helmUI();
+  $('aHold').querySelector('small').textContent=`${TICK} seconds`;
+  if(diff==='easy') $('coachList').innerHTML=coachLines().map(l=>`<li>${l}</li>`).join('');
+  if(diff!=='pro') renderMap($('map'),sc,P,ghost.states,{ghost:!FLEET,gUpto:gi,laylines:diff==='easy',fleet:FLEET||[]});
+}
+
+function coachLines(){
+  const w=WB(sc,P), up=upwindLeg(P), k=tackOf(P,w), oth=k==='stbd'?'port':'stbd', T=up?w.tu:w.td;
+  const err=Math.abs(norm(w.twd-P.hdg))-T, li=layInfo(sc,P), ss=shiftState(sc,P), out=[];
+  const nm={stbd:'starboard',port:'port'};
+  if(li[k].lay) out.push(`You're laying the mark on ${nm[k]}. Tap <strong>Steer for mark</strong> to keep the orange COG marker on the yellow dot.`);
+  else if(Math.abs(err)<3) out.push('Angle: on target. The bow is on the dashed line.');
+  else{const n=Math.round(Math.abs(err)/5)||1;out.push(`Angle: ${err<0?(up?'pinching':'sailing hot'):(up?'footing':'sailing deep')} by ${Math.round(Math.abs(err))}°. ${err<0?'Bear away':'Head up'} ${n>1?n+' times':'once'}.`);}
+  const sh=Math.round(ss.shift);
+  if(Math.abs(ss.shift)>=2) out.push(`Wind is ${Math.abs(sh)}° ${sh>0?'right':'left'} of its recent average: ${ss.bad>0?`<strong>${up?'a header':'an unfavourable shift'}</strong> on this ${up?'tack':'gybe'}`:`${up?'a lift':'a favourable shift'} on this ${up?'tack':'gybe'}`}.`);
+  else out.push('Wind is close to its recent average.');
+  if(w.puff>1.5) out.push(`You're in a puff: ${Math.round(w.tws)} kn, ${Math.round(w.puff)} kn more than the base breeze. Your targets are now ${w.tu}° upwind and ${w.td}° downwind, and auto-helm follows them.`);
+  else if(w.puff<-1.5) out.push(`You're in a lull (${Math.round(w.tws)} kn). Look for a darker patch on the map nearby and sail toward it.`);
+  if(Math.abs(norm(vel(P.hdg,1,w).cog))>=0) {const off=norm(vel(P.hdg,P.bsp||5,w).cog-P.hdg);if(Math.abs(off)>=3) out.push(`Current is setting you ${off<0?'left':'right'} by ${Math.round(Math.abs(off))}°. Judge laylines by COG, not the dashed lines.`);}
+  let call;
+  if(li[k].lay) call='Hold and fetch the mark.';
+  else if(li[oth].lay) call=`${up?'Tack':'Gybe'} now: ${nm[oth]} fetches the mark over the ground.`;
+  else if(ss.bad>3.5) call=`Consider ${up?'tacking':'gybing'}: you're on the wrong side of the shift.`;
+  else call='Hold and keep the bow on target.';
+  out.push(`<strong>Suggested:</strong> ${call}`);
+  return out;
+}
+
+function evaluate(act){
+  const w=WB(sc,P), up=upwindLeg(P), k=tackOf(P,w), oth=k==='stbd'?'port':'stbd';
+  const li=layInfo(sc,P), ss=shiftState(sc,P);
+  if(w.shade>.08)evals.shade++;if(w.puff>1.5)evals.puff++;else if(w.puff<-1.5)evals.lull++;
+  evals.ticks++; if(up) evals.upTicks++;
+  if(act==='tack'){
+    if(ss.bad<-3.5&&!li[oth].lay){evals.tackLift++;logMsg(`${up?'Tacked':'Gybed'} away from a favourable shift.`,'bad');}
+    else if(li[oth].lay&&li[oth].margin>4){evals.past++;logMsg(`${up?'Tacked':'Gybed'} late: you had overstood the layline.`,'bad');}
+    else logMsg(`${up?'Tacked':'Gybed'} onto ${oth==='stbd'?'starboard':'port'}.`,'good');
+    return;
+  }
+  // heading after action
+  const hd=typeof act==='number'?act:act==='up'?wrap(P.hdg-sgn(k)*5):act==='down'?wrap(P.hdg+sgn(k)*5):P.hdg;
+  const err=Math.abs(norm(w.twd-hd))-(up?w.tu:w.td);
+  if(!li[k].lay){if(err<-5)evals.pinch++;else if(err>6)evals.foot++;else evals.lifted++;}
+  if(ss.bad>4&&!li[k].lay&&P.t-P.lastTack>1) evals.headed++;
+  if(li[oth].lay&&li[oth].margin>4) {evals.past++; if(diff!=='pro')logMsg('You are past the layline on the other tack.','bad');}
+}
+
+/* ---- helm: auto-helm holds your target angle through shifts; Steer for mark keeps COG on the dot ---- */
+let autoHelm=store.get('ssim-autohelm',true);
+function helmHeading(){
+  const w=WB(sc,P),up=upwindLeg(P),k=tackOf(P,w),T=up?w.tu:w.td;
+  const angleHdg=wrap(w.twd+sgn(k)*(T+(P.offset||0)));
+  if(P.mode==='mark'){
+    const {brg}=brgDist(sc,P),h=headingForCog(brg,boatSpeed(T,w.tws),w),twa=Math.abs(norm(w.twd-h));
+    const ok=up?twa>=T-1:(twa<=T+15&&twa>=95);
+    if(ok&&Math.abs(norm(w.twd-h))<=180&&Math.sign(norm(w.twd-h))===Math.sign(norm(w.twd-P.hdg)||1))return {h,note:'Steering for the mark'};
+    return {h:autoHelm?angleHdg:P.hdg,note:`Can't reach the mark on this ${up?'tack':'gybe'} yet${autoHelm?', holding target angle':''}`,miss:1};
+  }
+  if(autoHelm)return {h:angleHdg,note:P.offset?`Holding ${Math.abs(P.offset)}° ${P.offset<0?(up?'high':'hot'):(up?'low':'deep')} of target`:'Holding target angle'};
+  return {h:P.hdg,note:'Manual steering'};
+}
+function helmUI(){
+  if(!P)return;const st=helmHeading();
+  $('helmState').textContent=st.note+(autoHelm||P.mode==='mark'||P.usedAuto?' · tougher grading':' · manual grading');
+  $('aAuto').textContent='Auto-helm: '+(autoHelm?'on':'off');$('aAuto').setAttribute('aria-pressed',autoHelm?'true':'false');
+  $('aMark').classList.toggle('on',P.mode==='mark');
+  const w=WB(sc,P),k=tackOf(P,w),up=upwindLeg(P),R=k==='stbd';
+  $('aUp').querySelector('small').textContent=`5° toward wind · turns ${R?'right ↻':'left ↺'}`;
+  $('aDown').querySelector('small').textContent=`5° off wind · turns ${R?'left ↺':'right ↻'}`;
+  $('aTack').querySelector('small').textContent=`turns ${(up?R:!R)?'right ↻':'left ↺'} onto target`;
+}
+$('aAuto').onclick=()=>{autoHelm=!autoHelm;store.set('ssim-autohelm',autoHelm);if(P&&!autoHelm&&P.mode!=='mark')P.offset=0;helmUI();};
+function act(a){
+  if(busy||!P||P.done) return;
+  clearTimer();
+  if(a==='quit'){finish(true);return;}
+  const n=a==='hold3'?3:1;
+  for(let i=0;i<n&&!P.done;i++){
+    const req=i===0?(a==='hold3'?'hold':a):'hold';
+    let aa=req;
+    if(req==='tack'){P.offset=0;P.mode='angle';}
+    else if(req==='up'||req==='down'){
+      if(autoHelm){P.mode='angle';P.offset=(P.offset||0)+(req==='up'?-5:5);aa=helmHeading().h;}
+      else P.mode='angle';
+    }
+    else if(req==='mark'){P.mode='mark';const st=helmHeading();aa=st.h;if(st.miss)logMsg(st.note+'.','bad');else logMsg('Steering for the mark.','good');}
+    else if(req==='hold'&&(autoHelm||P.mode==='mark'))aa=helmHeading().h;
+    if(autoHelm||P.mode==='mark')P.usedAuto=true;
+    if(FLEET)snapFleet(sc,[P,...FLEET]);
+    evaluate(aa);
+    if(FLEET){const all=[P,...FLEET];FLEET.forEach(f=>{if(!f.done)applyAction(sc,f,aiDecide(sc,f,all));});}
+    const wasPort=FLEET&&tackOf(P,WB(sc,P))==='port';
+    applyAction(sc,P,aa);
+    if(P.penNext){P.penalty*=P.penNext;P.penNext=0;}
+    const pk=FLEET?tackOf(P,WB(sc,P)):null;
+    const ev=sail(sc,P);
+    if(FLEET){FLEET.forEach(f=>{if(!f.done)sail(sc,f);});checkFouls(pk);}
+    let stop=false;
+    ev.forEach(e=>{if(e.type==='round'){P.offset=0;P.mode='angle';logMsg(`Rounded the windward mark at ${mmss(e.t)}${ghost.G.rounds[0]?` (ghost ${mmss(ghost.G.rounds[0])})`:''}.`,'good');stop=true;}
+      if(e.type==='finish')logMsg(`Finished at ${mmss(e.t)}.`,'good'); if(e.type==='dnf')logMsg('Time limit reached.','bad');});
+    if(stop) break;
+    if(i<n-1&&brgDist(sc,P).dist<.12) break;
+    if(i<n-1&&FLEET&&tackOf(P,WB(sc,P))==='port'&&portConflict(helmHeading().h)){logMsg('Stopped early: a starboard boat is close.','bad');break;}
+  }
+  if(P.done){finish(false);return;}
+  draw(); armTimer();
+}
+/* ---- fleet rules: port gives way to starboard ---- */
+function checkFouls(pk){
+  if(!FLEET||pk!=='port'||!P.seg)return;
+  for(const f of FLEET){if(!f.seg||f.done&&!f.seg)continue;
+    const fk=tackOf(f,windAt(sc,Math.max(0,f.t-1),f.seg[0],f.seg[1],f.id));
+    if(fk==='stbd'&&f.lastTack!==f.t-1&&segMin(P.seg,f.seg)<.012){P.penNext=.3;evals.fouls++;logMsg(`Foul! You were on port and hit ${f.name} on starboard. Penalty turn: you lose about 30 seconds.`,'bad');break;}}
+}
+function portConflict(hdg){ /* would sailing on port at this heading hit a starboard boat in the next two moves? */
+  if(!FLEET)return null;const seg=predictSeg(sc,P,hdg),seg3=[seg[2],seg[3],2*seg[2]-seg[0],2*seg[3]-seg[1]];
+  for(const f of FLEET){if(f.done)continue;if(tackOf(f,WB(sc,f))!=='stbd')continue;
+    const s2=predictSeg(sc,f,f.hdg),s4=[s2[2],s2[3],2*s2[2]-s2[0],2*s2[3]-s2[1]];
+    if(segMin(seg,s2)<.02||segMin(seg3,s4)<.02)return f;}
+  return null;}
+function fleetWarn(){
+  const el=$('fleetMsg');if(!FLEET){el.classList.add('hidden');return;}
+  const w=WB(sc,P),k=tackOf(P,w),msgs=[];let bad=false;
+  if(k==='port'){const f=portConflict(helmHeading().h);if(f){msgs.push(`⚠ ${f.name} is on starboard and on a collision course. You're on port: tack, or bear away to pass behind.`);bad=true;}}
+  else{const f=portConflict(targetHdg('port',w,upwindLeg(P)));if(f){msgs.push(`⚠ Don't ${upwindLeg(P)?'tack':'gybe'} yet: you'd be on port right in front of ${f.name} on starboard.`);bad=true;}}
+  if(w.shade>.08){const by=FLEET.find(f=>f.id===w.shadeBy);msgs.push(`Dirty air from ${by?by.name:'a boat ahead'}: ${Math.round(w.shade*100)}% less wind. Tack or change course for clear air.`);}
+  el.innerHTML=msgs.join('<br>');el.classList.toggle('hidden',!msgs.length);el.classList.toggle('bad',bad);
+}
+function armTimer(){
+  if(diff!=='pro') return;
+  deadline=Date.now()+12000;
+  timerId=setInterval(()=>{const left=deadline-Date.now();$('timerBar').style.width=clamp(left/120,0,100)+'%';
+    if(left<=0){clearTimer();evals.missed++;logMsg('No decision in time. The helm held course.','bad');act('hold');}},100);
+}
+function clearTimer(){if(timerId){clearInterval(timerId);timerId=null;}}
+
+$('aUp').onclick=()=>act('up');$('aDown').onclick=()=>act('down');$('aTack').onclick=()=>act('tack');
+$('aHold').onclick=()=>act('hold');$('aMark').onclick=()=>act('mark');$('aHold3').onclick=()=>act('hold3');$('aQuit').onclick=()=>act('quit');
+document.addEventListener('keydown',e=>{
+  if($('race').classList.contains('hidden')||e.target.tagName==='INPUT'||!$('songbook').classList.contains('hidden')||!$('tut').classList.contains('hidden')) return;
+  const m={u:'up',d:'down',t:'tack',g:'tack',' ':'hold',h:'hold3',m:'mark'}[e.key.toLowerCase()];
+  if(m){e.preventDefault();act(m);}
+});
+$('startBtn').onclick=start;
+
+/* ============ debrief ============ */
+function finish(retired){
+  clearTimer();
+  const gT=ghost.G.finish, you=retired?null:P.finish;
+  let grade='DNF',delta=null,place=null,order=null;
+  const helped=!!P.usedAuto;const SCALE=helped?[-2,1,4,8,14]:[0,5,10,16,25];
+  if(you){delta=you-gT;const pct=delta/gT*100;grade=pct<SCALE[0]?'A+':pct<SCALE[1]?'A':pct<SCALE[2]?'B':pct<SCALE[3]?'C':pct<SCALE[4]?'D':'F';}
+  if(FLEET){
+    let guard=0;while(FLEET.some(f=>!f.done)&&guard++<200){snapFleet(sc,FLEET);FLEET.forEach(f=>{if(!f.done)applyAction(sc,f,aiDecide(sc,f,FLEET));});FLEET.forEach(f=>{if(!f.done)sail(sc,f);});}
+    sc.snap=null;
+    order=[P,...FLEET].map(b=>({b,t:b===P?you:b.finish})).sort((x,y)=>(x.t||1e9)-(y.t||1e9));
+    place=you?order.findIndex(o=>o.b===P)+1:6;
+    grade=!you?'DNF':['A+','A','B','C','D','F'][place-1];
+  }
+  const res=store.get('ssim-results',[]);res.push({code:sc.code,diff,time:you,delta,grade,auto:helped,place,date:Date.now()});store.set('ssim-results',res.slice(-40));
+  const tot=Math.max(1,evals.pinch+evals.foot+evals.lifted);
+  const pctOn=Math.round(evals.lifted/tot*100);
+  const lessons=[];
+  if(evals.pinch>2) lessons.push(`You pinched for ${evals.pinch} legs of ${TICK}s. When the bow is on the windward side of the dashed line, bear away: speed drops fast below target.`);
+  if(evals.foot>2) lessons.push(`You sailed low of target for ${evals.foot} stretches. Footing is cheaper than pinching, but it still loses ground to the mark.`);
+  if(evals.headed>2) lessons.push(`You stayed on an unfavourable shift for ${evals.headed} stretches. When TWD sits on the far edge of the shift sectors against you, it's time to tack or gybe.`);
+  if(evals.tackLift>0) lessons.push(`You tacked away from a favourable shift ${evals.tackLift} time${evals.tackLift>1?'s':''}. Each tack costs about 20 seconds, so only tack when the other side is better.`);
+  if(evals.past>0) lessons.push(`You spent ${evals.past} stretch${evals.past>1?'es':''} past a layline. Tack when the other tack's COG reaches the yellow dot, not later.`);
+  if(evals.missed>0) lessons.push(`You ran out of time on ${evals.missed} decision${evals.missed>1?'s':''}. Use the three-question glance: COG, angle, mark.`);
+  if(evals.fouls>0) lessons.push(`You fouled a starboard boat ${evals.fouls} time${evals.fouls>1?'s':''}. On port tack, watch for the warning and tack or duck behind before you get close.`);
+  if(evals.shade>3) lessons.push(`You sailed in another boat's dirty air for ${evals.shade} stretches. The shaded wedges on the map show wind shadows. Tack or sail around them.`);
+  if(evals.lull>evals.puff+2) lessons.push(`You spent more time in lulls (${evals.lull}) than in puffs (${evals.puff}). Steer toward the darker patches on the map, especially upwind.`);
+  if(!lessons.length) lessons.push('Clean race. Try the same code on a harder level, or a different scenario type.');
+  lessons.push(`<strong>Scenario lesson:</strong> ${sc.A.lesson}`);
+  const d=$('debrief');
+  d.innerHTML=`<div class="panel">
+    <span class="muted">${sc.code} · ${sc.A.name}</span>
+    <div class="row" style="gap:18px;margin-top:8px;align-items:flex-end"><div class="grade">${grade}</div>
+      <div><h2>${you?`${mmss(you)}`:retired?'Retired':'Did not finish'}</h2><p class="muted" style="margin:0">${FLEET?(you?`Finished ${ordinal(place)} of 6`:'Not placed'):(you?(delta<=0?`Beat the ghost by ${mmss(-delta)}`:`${mmss(delta)} behind the ghost`):`Ghost finished in ${mmss(gT)}`)}</p></div></div>
+    ${FLEET?`<p class="muted" style="font-size:.85rem;margin:8px 0 0">Fleet scale: 1st A+ · 2nd A · 3rd B · 4th C · 5th D · 6th F</p><table class="restable"><tr><th></th><th>Boat</th><th>Time</th></tr>${order.map((o,i)=>`<tr class="${o.b===P?'me':''}"><td>${o.t?ordinal(i+1):'–'}</td><td>${o.b===P?'You':`<span style="color:${o.b.color}">●</span> ${o.b.name}`}</td><td>${o.t?mmss(o.t):(o.b===P&&retired?'Retired':'DNF')}</td></tr>`).join('')}</table>`:`<p class="muted" style="font-size:.85rem;margin:8px 0 0">${helped?'Auto-helm scale: A+ beats the ghost by 2% · A within 1% · B within 4% · C within 8% · D within 14%. Race without auto-helm for the easier manual scale.':'Manual steering scale: A+ beats the ghost · A within 5% · B within 10% · C within 16% · D within 25%'}</p>`}
+    <div class="kv">
+      ${FLEET?`<span>Fouls</span><span>${evals.fouls}</span><span>Stretches in dirty air</span><span>${evals.shade}</span>`:''}
+      <span>Ghost time</span><span>${mmss(gT)}</span>
+      <span>Your ${P.rounds[0]?'windward rounding':'progress'}</span><span>${P.rounds[0]?mmss(P.rounds[0]):'–'}</span>
+      <span>Ghost windward rounding</span><span>${ghost.G.rounds[0]?mmss(ghost.G.rounds[0]):'–'}</span>
+      <span>Tacks and gybes (you / ghost)</span><span>${P.tacks} / ${ghost.G.tacks}</span>
+      <span>Time on target angle</span><span>${pctOn}%</span>
+    </div>
+    <h3 style="margin-top:16px">What to work on</h3>
+    <ul class="lessons">${lessons.map(l=>`<li>${l}</li>`).join('')}</ul>
+    <div class="row" style="margin-top:12px"><button class="btn primary" id="again">Race this code again</button><button class="btn" id="newOne">New scenario</button><button class="btn" id="toSetup">Change level</button></div>
+  </div>
+  <div class="panel"><h3 style="margin-bottom:8px">${FLEET?'Your track vs the fleet':'Your track vs the ghost'}</h3><div id="dMap"></div><p class="muted" style="font-size:.9rem;margin-top:8px">${FLEET?'Blue line is you; coloured lines are the fleet.':'Solid line is you, dashed is the ghost.'} Share the code <strong>${sc.code}</strong> so others can race the same wind.</p></div>`;
+  renderMap($('dMap'),sc,P,ghost.states,{ghost:!FLEET,gUpto:ghost.states.length-1,laylines:false,fleet:FLEET||[],fleetTracks:true,puffs:false,legend:false,t:P.t});
+  $('race').classList.add('hidden');d.classList.remove('hidden');
+  $('again').onclick=start;
+  $('newOne').onclick=()=>{codeIn.value=randomCode();start();};
+  $('toSetup').onclick=()=>{d.classList.add('hidden');$('setup').classList.remove('hidden');showBrief();};
+  P.done=true;
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+
+/* ============ tutorial ============ */
+const TB={tws:12,bsp:6,tUp:T_UP,tDn:T_DN,dtw:.45,secLo:-3,secHi:4,set:210,drift:.3,up:true};
+const P_=o=>Object.assign({},TB,o);
+const at=(p,b,r,rr)=>{const q=pt(b,r,p.hdg);return {x:q[0],y:q[1],r:rr||16};};
+const TUT=[
+ {t:'Welcome aboard',
+  body:'<p>In each race you are the helm and navigator. Every button press is one decision, and the boat then sails for 45 seconds of race time.</p><p>This short tutorial walks through the calls you will make, with a few practice decisions. It takes about two minutes. You can skip it at any time and reopen it from the Tutorial button.</p>',
+  p:P_({hdg:317,twd:0,wpt:12})},
+ {t:'The screen points where you point',
+  body:'<p>The boat outline always faces the top of the display, so the screen matches what you see over the bow. The white box shows your heading, and the compass rose turns around the boat.</p><p>The <strong>yellow dot</strong> on the rim is the mark. Here it is up and to the right, because we are beating on starboard tack toward a windward mark.</p>',
+  p:P_({hdg:317,twd:0,wpt:12}),hl:p=>[{x:200,y:19,r:34},{x:200,y:197,r:70},at(p,p.wpt,160,14)]},
+ {t:'Sail your target angle',
+  body:'<p>The dashed lines show your target heading on each tack: <strong>green</strong> for starboard, <strong>red</strong> for port. The T arrow turns green when you are within 10° of target and blue when you are off it.</p><p>Right now the bow is on the wind side of the green dashed line. Check the TWA tile: 38° against a 43° target.</p>',
+  p:P_({hdg:322,twd:0,wpt:12}),hl:p=>[at(p,wrap(p.twd-T_UP),80,18),{x:200,y:130,r:18}],hlTiles:['TWA'],
+  task:{q:'You are pinching by 5°. What do you press?',opts:[['Head up',0,'That turns you even closer to the wind. Pinching kills speed.'],['Bear away',1,'Right. The bow drops onto the dashed line and the T arrow goes green.'],['Tack',0,'Nothing wrong with this tack yet. Fix the angle first.'],['Hold',0,'Holding keeps you pinching, and the boat stays slow.']],
+   after:P_({hdg:317,twd:0,wpt:12})}},
+ {t:'Spot a header',
+  body:'<p>A few minutes later the wind has swung 8° left, to 352°. You bore away to stay on target, so now the bow points further from the mark than before.</p><p>The shaded sectors show where the laylines have been over recent shifts. The wind is now at the far left of its recent range, so on starboard this is a <strong>header</strong>.</p>',
+  p:P_({hdg:309,twd:352,wpt:4,secLo:0,secHi:14}),hl:p=>[at(p,p.twd,177,18),at(p,wrap(p.twd-T_UP)+7,108,26)],hlTiles:['TWD'],
+  task:{q:'Starboard is headed and the mark is still upwind. Best call?',opts:[['Head up',0,'You would be pinching. The wind has moved, so the angle has to move with it.'],['Bear away',0,'That sails you further from the mark.'],['Tack',1,'Yes. A header on starboard is a lift on port. Tack and you point closer to the mark.'],['Hold',0,'You would keep sailing the bad side of the shift. A tack costs about 20 seconds, but this shift pays for it.']],
+   after:P_({hdg:35,twd:352,wpt:4,secLo:0,secHi:14})}},
+ {t:'Where are you really going?',
+  body:'<p>On port now. The <strong>orange marker</strong> on the rim is your course over ground (COG): where the boat is actually travelling. The <strong>blue arrow</strong> in the middle is the current, flowing toward the arrowhead at the speed shown.</p><p>If the COG marker sits away from the bow, the current is pushing you sideways.</p>',
+  p:P_({hdg:35,twd:352,wpt:352,set:300,drift:1.2,dtw:.3,secLo:-4,secHi:6}),hl:p=>{const c=compute(p);return [at(p,c.cog,160,15),{x:200,y:200,r:30}];},hlTiles:['COG'],
+  task:{q:'Which way is the current setting you?',opts:[['Left of the bow',1,'Correct. The COG marker is about 10° left of the bow, matching the arrow flowing to the left.'],['Right of the bow',0,'Look again. The orange marker sits to the left of the heading box.']]}},
+ {t:'Know when you can lay the mark',
+  body:'<p>The yellow dot has moved left as you sailed on port. Compare it with the <strong>green sector</strong>, which is where your starboard heading would be across recent shifts.</p><p>Dot on the inside of a sector: you cannot lay it on that tack yet. Dot inside the sector: it depends on the next shift. Dot past the sector: you lay it in any likely shift.</p>',
+  p:P_({hdg:35,twd:352,wpt:298,set:300,drift:1.2,dtw:.28,secLo:-4,secHi:6}),hl:p=>[at(p,p.wpt,160,15),at(p,wrap(p.twd-T_UP)+1,108,26)],
+  task:{q:'The dot is past the green sector. What now?',opts:[['Hold on port',0,'Every extra minute on port is distance you sail back later. You are already past the starboard layline.'],['Tack',1,'Right. Starboard fetches the mark now, even with an unfavourable shift. Later than this and you overstand.']],
+   after:P_({hdg:309,twd:352,wpt:298,set:300,drift:1.2,dtw:.27,secLo:-4,secHi:6})}},
+ {t:'Fetch the mark',
+  body:'<p>On starboard and laying the mark. Once you are fetching, stop steering to the dashed line and steer so the <strong>orange COG marker sits on the yellow dot</strong>. That is the shortest path over the ground.</p><p>Here the dot is a few degrees left of the COG marker, so you have a little to spare.</p>',
+  p:P_({hdg:309,twd:352,wpt:298,set:300,drift:1.2,dtw:.27,secLo:-4,secHi:6}),hl:p=>{const c=compute(p);return [at(p,c.cog,160,14),at(p,p.wpt,160,14)];},
+  task:{q:'How do you line the COG marker up with the dot?',opts:[['Head up',0,'That moves the COG marker further right, away from the dot. You would overstand.'],['Bear away',1,'Yes. Bearing away 5° swings the COG marker toward the dot, and you go faster too. Another press or two lines it up.']],
+   after:P_({hdg:304,twd:352,wpt:298,set:300,drift:1.2,dtw:.26,secLo:-4,secHi:6})}},
+ {t:'The run home',
+  body:'<p>When you round the windward mark, the sim puts you on your downwind target angle (150° TWA). The Tack button becomes <strong>Gybe</strong>.</p><p>Downwind the language flips: too high is <strong>sailing hot</strong>, too low is <strong>sailing deep</strong>. A wind shift that helps you upwind hurts you downwind, so you gybe on the shifts you would have stayed on going upwind. The yellow dot, sectors and COG work exactly the same way.</p>',
+  p:P_({hdg:202,twd:352,wpt:188,set:300,drift:.8,dtw:.6,up:false,bsp:6.3})},
+ {t:'Targets move with the breeze',
+  body:'<p>Boats point higher and run deeper as the wind builds. In light air you sail a little lower and hotter to keep the boat moving.</p><p>So the dashed target lines move on their own when wind speed changes. Here it\u2019s blowing 20 kn, so the upwind target is tighter and the downwind target deeper than in 12 kn. Auto-helm follows the new targets for you. When steering by hand, check <strong>TWS</strong> and <strong>TWA</strong> after every big change in pressure.</p>',
+  p:(()=>{const [u,d]=targets(20);return P_({hdg:wrap(0-u),twd:0,wpt:12,tws:20,bsp:7.2,tUp:u,tDn:d});})(),hl:p=>[at(p,wrap(p.twd-p.tUp),80,18)],hlTiles:['TWS','TWA'],
+  task:{q:'The breeze drops from 18 kn to 7 kn. Upwind, what happens to your best angle?',opts:[['Point higher (smaller TWA)',0,'The other way round. In light air, pointing high stalls the boat. You need a little more angle to keep speed up.'],['Sail a bit lower (bigger TWA)',1,'Right. Light air means a wider target angle so the boat keeps moving. Downwind it means sailing hotter.']]}},
+ {t:'Puffs and lulls',
+  body:'<p>The course map shows <strong>puffs</strong> as dark patches and <strong>lulls</strong> as pale ones. They drift downwind across the course, and inside a puff you get more wind, more speed and often a small shift.</p><p>On the display a puff shows up as a jump in <strong>TWS</strong>. Getting to the dark water first is one of the biggest gains in a race, especially upwind.</p>',
+  p:P_({hdg:317,twd:0,wpt:12,tws:16,bsp:6.8}),hlTiles:['TWS','BSP'],
+  task:{q:'A dark patch is coming down the course to your left, and you\u2019re in pale water. Best move upwind?',opts:[['Stay put and wait',0,'Lulls cost speed every second you\u2019re in them, and the puff may pass you by.'],['Head toward the dark patch',1,'Yes. Sailing into the puff gets you more pressure and speed. Upwind, that\u2019s often worth a tack.']]}},
+ {t:'Master mode: racing a fleet',
+  body:'<p>In <strong>Master</strong> you race five other boats: Osprey, Kestrel, Squall, Wahoo and Petrel. Your grade is your finishing place.</p><p><strong>Dirty air:</strong> every boat leaves a wind shadow downwind of it, shown as a shaded wedge on the map. Sail in it and you lose up to a third of your wind.</p><p><strong>Port gives way to starboard:</strong> on port tack you must keep clear of boats on starboard. A warning appears when one is on a collision course. Hit them and you take a penalty turn worth about 30 seconds.</p>',
+  p:P_({hdg:43,twd:0,wpt:12}),
+  task:{q:'You\u2019re on port and the warning says a starboard boat is on a collision course. What do you do?',opts:[['Hold your course',0,'That\u2019s a foul. Port must keep clear, and the penalty turn costs about 30 seconds.'],['Tack, or bear away to pass behind it',1,'Right. Ducking behind costs a little distance. A foul costs far more.']]}},
+ {t:'Racing the ghost',
+  body:'<p>On Deckhand, Navigator and Tactician, every race has a ghost boat on the same wind. It steers perfect angles, so you beat it with better decisions, not better helming. On Master you race the fleet instead.</p><p><strong>Auto-helm</strong> holds your target angle through wind shifts, so you can focus on when to tack. Once you can lay a mark, <strong>Steer for mark</strong> keeps you pointed at it. Turn auto-helm off if you want to steer every shift yourself.</p><p><strong>Scenario codes</strong> replay the exact same wind and current, so you can retry a race or share it. <strong>Hold ×3</strong> skips ahead and stops near marks. On a keyboard: U heads up, D bears away, T tacks or gybes, and Space holds.</p><p>After each race, the debrief grades you against the ghost and shows what cost you time. Deckhand level adds a coach that reads the screen for you, which is a good place to start.</p>',
+  p:P_({hdg:317,twd:0,wpt:12}),last:true}
+];
+let ti=0, tAnswered=false;
+function tutRender(){
+  const st=TUT[ti], needs=!!st.task&&!tAnswered;
+  const p=Object.assign({},(tAnswered&&st.task&&st.task.after)?st.task.after:st.p);
+  if(st.hl&&!(tAnswered&&st.task&&st.task.after)) p.hl=st.hl(p);
+  if(st.hlTiles&&!tAnswered) p.hlTiles=st.hlTiles;
+  renderDial($('tutDial'),p);
+  $('tutStep').textContent=`Step ${ti+1} of ${TUT.length}`;
+  $('tutDots').innerHTML=TUT.map((_,i)=>`<i class="${i===ti?'on':i<ti?'done':''}"></i>`).join('');
+  $('tutTitle').textContent=st.t;
+  $('tutText').innerHTML=st.body;
+  if(st.task){
+    $('tutTask').innerHTML=`<div class="task"><div class="q">Try it: ${st.task.q}</div><div class="topts">${st.task.opts.map((o,i)=>`<button class="topt" data-i="${i}" ${tAnswered?'disabled':''}>${o[0]}</button>`).join('')}</div><div class="tfb" id="tfb"></div></div>`;
+    if(tAnswered){const i=st.task.opts.findIndex(o=>o[1]);const b=$('tutTask').querySelector(`[data-i="${i}"]`);b.classList.add('right');$('tfb').className='tfb ok';$('tfb').textContent=st.task.opts[i][2];}
+  } else $('tutTask').innerHTML='';
+  $('tutBack').style.visibility=ti===0?'hidden':'visible';
+  $('tutSkip').textContent=st.last?'Close':'Skip tutorial';
+  const r=$('tutRight');
+  if(st.last) r.innerHTML=`<button class="btn" id="tutClose2">Back to setup</button><button class="btn primary" id="tutGo">Start a Deckhand race</button>`;
+  else r.innerHTML=`<button class="btn primary" id="tutNext" ${needs?'disabled style="opacity:.5"':''}>${ti===0?'Start tutorial':needs?'Answer to continue':'Next'}</button>`;
+  if($('tutNext')) $('tutNext').onclick=()=>{ti++;tAnswered=false;tutRender();$('tut').scrollTop=0;};
+  if($('tutGo')) $('tutGo').onclick=()=>{closeTut();setDiff('easy');start();};
+  if($('tutClose2')) $('tutClose2').onclick=closeTut;
+}
+$('tutTask').addEventListener('click',e=>{
+  const b=e.target.closest('.topt');if(!b||b.disabled)return;
+  const st=TUT[ti],o=st.task.opts[+b.dataset.i];
+  if(o[1]){tAnswered=true;tutRender();}
+  else{b.classList.add('wrong');b.disabled=true;$('tfb').className='tfb no';$('tfb').textContent=o[2]+' Try again.';}
+});
+$('tutBack').onclick=()=>{if(ti>0){ti--;tAnswered=false;tutRender();}};
+function openTut(){ti=0;tAnswered=false;$('tut').classList.remove('hidden');document.body.style.overflow='hidden';tutRender();$('tutSkip').focus();}
+function closeTut(){$('tut').classList.add('hidden');document.body.style.overflow='';store.set('ssim-tut-done',true);$('tutBtn').focus();}
+$('tutSkip').onclick=closeTut;
+$('tutBtn').onclick=openTut;
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('tut').classList.contains('hidden'))closeTut();});
+
+
+/* ============ music: original jig + traditional shanty, synthesized ============ */
+const Music=(()=>{
+  let onState=null,onSong=null,ctx=null,master=null,noise=null,timer=null,playing=false,cur=null,evI=0,loopStart=0,lastTune=-1,nowName='';const lastVar={};
+  /* ---- ABC notation reader (public-domain transcriptions) ---- */
+  const LET={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  const KEYFIFTHS={C:0,G:1,D:2,A:3,E:4,B:5,F:-1,Bb:-2,Eb:-3,Ab:-4,Am:0,Em:1,Bm:2,Dm:-1,Gm:-2,Cm:-3,Fm:-4};
+  function keySig(k){const f=KEYFIFTHS[k]||0,acc={};'FCGDAEB'.slice(0,Math.max(0,f)).split('').forEach(l=>acc[l]=1);'BEADGCF'.slice(0,Math.max(0,-f)).split('').forEach(l=>acc[l]=-1);return acc;}
+  function parseABC(src){
+    let M='4/4',L=1/8,K='C';const body=[];
+    src.split('\n').forEach(line=>{line=line.replace(/%.*$/,'');const m=line.match(/^([A-Za-z]):(.*)$/);if(m){const f=m[1],v=m[2].trim();if(f==='M')M=v;else if(f==='L'){const q=v.split('/');L=(+q[0])/(+q[1]);}else if(f==='K')K=v;return;}body.push(line);});
+    let kn=K.split(/\s+/)[0];if(/min/i.test(K)&&!/m$/.test(kn))kn+='m';
+    const minor=/m$/.test(kn),tonic=LET[kn[0]]+(kn[1]==='b'?-1:kn[1]==='#'?1:0),sig=keySig(kn);
+    const unit=L/(1/8),str=body.join(' ');const items=[];let i=0,barAcc={};
+    const dur=()=>{let num='';while(/\d/.test(str[i]||''))num+=str[i++];let d=num?+num:1;let sl=0,den='';while(str[i]==='/'){sl++;i++;while(/\d/.test(str[i]||''))den+=str[i++];}if(sl)d/=den?+den:Math.pow(2,sl);return d*unit;};
+    const note=()=>{let acc=null;while('^_='.includes(str[i]||'x')){const c=str[i++];acc=(acc||0)+(c==='^'?1:c==='_'?-1:0);if(c==='=')acc=0;}
+      const ch=str[i++],up=ch.toUpperCase();let m=60+LET[up]+(ch===up?0:12);while(str[i]===','||str[i]==="'"){m+=str[i]===','?-12:12;i++;}
+      const key=up+m;if(acc!==null)barAcc[key]=acc;const a=barAcc[key]!==undefined?barAcc[key]:(sig[up]||0);return m+a;};
+    while(i<str.length){const c=str[i];
+      if(/\s/.test(c)){i++;continue;}
+      if(c==='"'){i=str.indexOf('"',i+1)+1||str.length;continue;}
+      if(c==='!'){i=str.indexOf('!',i+1)+1||str.length;continue;}
+      if(c==='{'){i=str.indexOf('}',i+1)+1||str.length;continue;}
+      if(c==='|'){if(str[i+1]===':'){items.push('rs');i+=2;}else{i++;if(str[i]===']'||str[i]==='|')i++;}barAcc={};continue;}
+      if(c===':'){if(str[i+1]==='|'){items.push('re');i+=2;if(str[i]===':'){items.push('rs');i++;}}else i++;barAcc={};continue;}
+      if(c==='['){i++;let top=null,d0=null;while(i<str.length&&str[i]!==']'){if(/[_^=A-Ga-g]/.test(str[i])){const m=note();const d=dur();if(top===null||m>top)top=m;if(d0===null)d0=d;}else i++;}i++;const k=dur();items.push([top,(d0||unit)*k/unit]);continue;}
+      if(/[_^=A-Ga-g]/.test(c)){const m=note();items.push([m,dur()]);continue;}
+      if(c==='z'||c==='x'){i++;items.push([null,dur()]);continue;}
+      i++;}
+    const out=[];let seg=0;items.forEach(it=>{if(it==='rs')seg=out.length;else if(it==='re'){out.push(...out.slice(seg));seg=out.length;}else out.push(it);});
+    const [mn,md]=M==='C'?[4,4]:M.split('/').map(Number);const bar=mn*8/md;
+    return {mel:out,bar,tonic,minor};
+  }
+  const QUAL={maj:[0,4,7],min:[0,3,7]};
+  function chordAt(rootPc,q){const r=((rootPc%12)+12)%12,iv=QUAL[q];return {b:36+r,f:36+((r+7)%12),c:iv.map(x=>55+(((r+x)-7)%12+12)%12)};}
+  function autoChords(tn){
+    const T=tn.tonic,cands=tn.minor?[[0,'min'],[7,'maj'],[5,'min'],[3,'maj'],[10,'maj'],[8,'maj']]:[[0,'maj'],[7,'maj'],[5,'maj'],[9,'min'],[2,'min']];
+    let tot=0;tn.mel.forEach(x=>tot+=x[1]);
+    const bars=Math.max(1,Math.floor((tot-tn.pick)/tn.bar)),res=[];
+    for(let b=0;b<bars;b++){
+      const s0=tn.pick+b*tn.bar,s1=s0+tn.bar;let best=null,bs=-1;
+      cands.forEach(([r,q],ci)=>{const pcs=QUAL[q].map(x=>(T+r+x)%12);let sc=0,t=0;
+        tn.mel.forEach(([m,d])=>{const a=Math.max(t,s0),e=Math.min(t+d,s1);if(m!==null&&e>a&&pcs.includes(m%12))sc+=(e-a)*(Math.abs(t-s0)<.01?1.6:1);t+=d;});
+        if(b===bars-2&&ci===1)sc+=tn.bar*.5;sc-=ci*.01;if(sc>bs){bs=sc;best=chordAt(T+r,q);}});
+      res.push(best);}
+    return res;
+  }
+  const P68=[[0,'bass'],[0,'kick'],[1,'hat'],[2,'chord'],[3,'fifth'],[3,'kick'],[4,'hat'],[5,'chord']];
+  const P44=[[0,'bass'],[0,'kick'],[1,'hat'],[2,'chord'],[3,'hat'],[4,'fifth'],[4,'kick'],[5,'hat'],[6,'chord'],[7,'hat']];
+  const P24=[[0,'bass'],[0,'kick'],[1,'chord'],[1,'hat'],[2,'fifth'],[2,'kick'],[3,'chord'],[3,'hat']];
+  const SRC=[
+    {name:"What Shall We Do with the Drunken Sailor",note:'Traditional sea shanty',lead:'fiddle',e8:60/138/2,reps:1,pat:P44,pick:0,
+     chords:['Dm','Dm','C','C','Dm','Dm','C','Dm','Dm','Dm','C','C','Dm','Dm','C','Dm'],
+     abc:`M:4/4
+L:1/8
+K:Dm
+A2AA A2AA|A2D2 F2A2|G2GG G2GG|G2C2 E2G2|A2AA A2AA|A2=B2 ^c2d2|c2A2 G2E2|D4 D4|
+A4 A4|A2D2 F2A2|G4 G4|G2C2 E2G2|A4 A4|A2=B2 ^c2d2|c2A2 G2E2|D4 D4|]`},
+    {name:'Blow the Man Down',note:'Traditional halyard shanty',lead:'accordion',e8:60/100/3,reps:3,pat:P68,pick:2,
+     abc:`M:6/8
+L:1/8
+K:F
+(FA) |c3/2d/c AFA |c3/2d/c A FA |c3 d3 | B3/2A/B G2 A |B3/2A/B GEG |BAG d2 f |c3/2c/c c2 B |A3/2G/A F2 z |]`},
+    {name:"Sailor's Hornpipe",note:'Traditional dance tune, first printed c. 1757 as "The College Hornpipe"',lead:'whistle',e8:60/104/2,reps:1,pat:P24,pick:1,
+     abc:`M:2/4
+L:1/8
+K:Bb
+d/c/|B B,B, (F/E/)|(D/B,/)D/F/ (B/d/)c/B/|c CC (c/B/)|(A/F/)A/c/ fg/a/| (b/a/)g/f/ (g/f/)e/d/|(e/d/)c/B/ (c/B/)A/G/|(F/B/)A/c/ (B/d/)c/e/|d [DB][DB]:|
+|:(F/E/)|(D/F/)B/F/ (D/F/)B/F/|G[G,E][G,E] (G/F/)|(=E/G/)_c/G/ (E/G/)c/G/|A[A,F][A,F] (c/d/)| eg/a/ (g/f/)e/d/|(e/d/)c/B/ (c/B/)A/G/|(F/B/)A/c/ (B/d/)c/e/|d [DB][DB]:|`}
+  ];
+  const NAMED={Dm:chordAt(2,'min'),C:chordAt(0,'maj')};
+  const TUNES=SRC.map(t=>{const r=parseABC(t.abc);const tn=Object.assign({},t,r);tn.ch=t.chords?t.chords.map(c=>NAMED[c]):autoChords(tn);
+    tn.scale=(tn.minor?[0,2,3,5,7,8,10]:[0,2,4,5,7,9,11]).map(x=>(x+tn.tonic)%12);return tn;});
+  const VARS=[
+    {tim:null,harm:false,drums:'full',vamp:0,orn:.15},
+    {tim:'whistle',harm:true,drums:'busy',vamp:0,orn:.3},
+    {tim:'accordion',harm:false,drums:'late',vamp:2,orn:.2},
+    {tim:'fiddle',harm:true,drums:'full',vamp:2,orn:.25},
+    {tim:'whistle',harm:false,drums:'late',vamp:0,orn:.35}
+  ];
+  const inKey=(m,sc)=>sc.includes(((m%12)+12)%12);
+  function stepUp(m,sc){let n=m+1;for(let k=0;k<3&&!inKey(n,sc);k++)n++;return n;}
+  function thirdBelow(m,sc){let n=m,c=0;for(let k=0;k<6&&c<2;k++){n--;if(inKey(n,sc))c++;}return n;}
+  function build(tn,v){
+    if(tn.midi){const ev=tn.midi.map(x=>({t:x.t,k:'piano',m:x.m,d:x.d,vel:x.v}));const end=tn.midi.reduce((a,x)=>Math.max(a,x.t+x.d),0);return {len:end+1.2,ev,name:tn.name};}
+    const e8=tn.e8*(.97+Math.random()*.07),bl=tn.bar,off=v.vamp*bl,tim=v.tim||tn.lead,ev=[];
+    let mlen=0;tn.mel.forEach(x=>mlen+=x[1]);
+    const ovl=tn.pick&&((mlen-tn.pick)%bl===0)?tn.pick:0,repLen=mlen-ovl;
+    const nb=tn.ch.length;
+    for(let b=0;b<v.vamp;b++)tn.pat.forEach(([pp,k])=>{if(k==='chord'&&b===0)return;ev.push({t:(b*bl+pp)*e8,k,ch:tn.ch[0]});});
+    for(let rep=0;rep<tn.reps;rep++){
+      const base=off+rep*repLen,harm=tn.reps>1?(rep%2===1)!==v.harm:v.harm;
+      let t=0;
+      tn.mel.forEach(([m,d])=>{
+        if(m!==null){const T=(base+t)*e8,D=d*e8;
+          if(d>=2&&Math.random()<v.orn){ev.push({t:T,k:'lead',m:stepUp(m,tn.scale),d:e8*.3,tim,vel:.75});ev.push({t:T+e8*.3,k:'lead',m,d:D-e8*.3,tim});}
+          else ev.push({t:T,k:'lead',m,d:D,tim});
+          if(harm&&d>=1)ev.push({t:T,k:'harm',m:thirdBelow(m,tn.scale),d:D});}
+        t+=d;});
+      tn.ch.forEach((c,i)=>{
+        const b0=base+tn.pick+i*bl,firstHalf=rep===0&&i<nb/2;
+        tn.pat.forEach(([pp,k])=>{if(v.drums==='late'&&firstHalf&&k!=='bass'&&k!=='fifth')return;ev.push({t:(b0+pp)*e8,k,ch:c});});
+        if(v.drums==='busy')for(let pp=0;pp<bl;pp++)if(!tn.pat.some(q=>q[0]===pp&&q[1]==='hat'))ev.push({t:(b0+pp)*e8,k:'hat',soft:1});
+        if((i%8===7&&i<nb-1)||(v.drums==='late'&&rep===0&&i===Math.floor(nb/2)-1))for(let pp=Math.max(0,bl-3);pp<bl;pp++){ev.push({t:(b0+pp)*e8,k:'hat'});ev.push({t:(b0+pp)*e8,k:'kick',soft:1});}
+      });
+    }
+    return {len:(off+(tn.reps-1)*repLen+mlen)*e8,ev:ev.sort((a,b)=>a.t-b.t),name:tn.name};
+  }
+  function nextSection(){
+    let ti;do{ti=Math.floor(Math.random()*TUNES.length);}while(TUNES.length>1&&ti===lastTune);lastTune=ti;
+    let vi;do{vi=Math.floor(Math.random()*VARS.length);}while(vi===lastVar[ti]);lastVar[ti]=vi;
+    const sec=build(TUNES[ti],VARS[vi]);sec.tune=TUNES[ti].name;return sec;
+  }
+  /* ---- optional MIDI (public-domain 1891 score of "A Piratical Ballad", home-screen version only) ---- */
+  function parseMidi(buf){
+    const d=new DataView(buf);let p=0;const str=n=>{let s2='';for(let k=0;k<n;k++)s2+=String.fromCharCode(d.getUint8(p+k));p+=n;return s2;};
+    if(str(4)!=='MThd')throw new Error('not midi');const hl=d.getUint32(p);p+=4;const ntr=d.getUint16(p+2),div=d.getUint16(p+4);p+=hl;
+    const evs=[];
+    for(let k=0;k<ntr&&p<d.byteLength;k++){
+      if(str(4)!=='MTrk')break;const len=d.getUint32(p);p+=4;const end=p+len;let tick=0,run=0;
+      const vlq=()=>{let v=0,b;do{b=d.getUint8(p++);v=(v<<7)|(b&127);}while(b&128);return v;};
+      while(p<end){tick+=vlq();let st=d.getUint8(p);if(st&128){p++;if(st<0xf0)run=st;}else st=run;
+        const hi=st&0xf0,ch=st&15;
+        if(st===0xff){const ty=d.getUint8(p++),l=vlq();if(ty===0x51)evs.push({tick,tempo:(d.getUint8(p)<<16)|(d.getUint8(p+1)<<8)|d.getUint8(p+2)});p+=l;}
+        else if(st===0xf0||st===0xf7){p+=vlq();}
+        else if(hi===0x90||hi===0x80){const n=d.getUint8(p),vv=d.getUint8(p+1);p+=2;if(ch!==9)evs.push({tick,on:hi===0x90&&vv>0,n,v:vv,ch});}
+        else if(hi===0xc0||hi===0xd0)p+=1;else p+=2;}
+      p=end;}
+    evs.sort((x,y)=>(x.tick-y.tick)||((x.on?1:0)-(y.on?1:0)));
+    let tempo=500000,lt=0,sec=0;const open={},notes=[];
+    evs.forEach(e=>{sec+=(e.tick-lt)*tempo/1e6/div;lt=e.tick;if(e.tempo){tempo=e.tempo;return;}const key=e.ch+':'+e.n;
+      if(e.on)(open[key]=open[key]||[]).push({t:sec,v:e.v});else{const o=open[key]&&open[key].shift();if(o)notes.push({t:o.t,d:Math.max(.06,sec-o.t),m:e.n,v:Math.max(.35,o.v/127)});}});
+    return notes;
+  }
+  let midiTried=false;
+  function tryMidi(){
+    if(midiTried)return;midiTried=true;
+    try{fetch('music/PiraticalBallad.mid').then(r=>r.ok?r.arrayBuffer():null).then(b=>{if(!b)return;const notes=parseMidi(b);if(notes.length>20)TUNES.push({name:"Fifteen Men on the Dead Man's Chest",midi:notes});}).catch(()=>{});}catch(e){}
+  }
+  const mf=m=>440*Math.pow(2,(m-69)/12);
+  function env(g,t,peak,att,dec,sus,end,rel){g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+att);g.gain.linearRampToValueAtTime(sus,t+att+dec);g.gain.setValueAtTime(sus,end);g.gain.linearRampToValueAtTime(0,end+rel);}
+  function lead(t,m,d,tim,vel){
+    vel=vel||1;
+    const g=ctx.createGain(),lp=ctx.createBiquadFilter();lp.type='lowpass';lp.Q.value=1;
+    const o1=ctx.createOscillator(),o2=ctx.createOscillator(),g2=ctx.createGain();
+    let f=mf(m),peak=.13,sus=.09,att=.012,vib=9;
+    if(tim==='whistle'){o1.type='triangle';o2.type='sine';f=mf(m<=79?m+12:m);o2.detune.value=4;lp.frequency.value=5200;g2.gain.value=.4;peak=.15;sus=.11;att=.02;vib=12;}
+    else if(tim==='accordion'){o1.type='square';o2.type='square';o1.detune.value=-10;o2.detune.value=10;lp.frequency.value=1700;g2.gain.value=.9;peak=.085;sus=.075;att=.025;vib=0;}
+    else if(tim==='piano'){o1.type='triangle';o2.type='sine';o2.detune.value=1200;lp.frequency.value=3000;g2.gain.value=.25;peak=.12;sus=.03;att=.006;vib=0;}
+    else if(tim==='harm'){o1.type='triangle';o2.type='sine';lp.frequency.value=1800;g2.gain.value=.3;peak=.06;sus=.045;att=.03;vib=0;}
+    else{o1.type='sawtooth';o2.type='square';o2.detune.value=8;lp.frequency.value=2300;lp.Q.value=1.2;g2.gain.value=.45;}
+    o1.frequency.value=o2.frequency.value=f;
+    if(vib&&d>.3){const l=ctx.createOscillator(),lg=ctx.createGain();l.frequency.value=5.6;lg.gain.setValueAtTime(0,t);lg.gain.linearRampToValueAtTime(vib,t+.25);l.connect(lg);lg.connect(o1.detune);lg.connect(o2.detune);l.start(t);l.stop(t+d+.1);}
+    if(tim==='accordion'){const tr=ctx.createOscillator(),tg=ctx.createGain();tr.frequency.value=6;tg.gain.value=.018;tr.connect(tg);tg.connect(g.gain);tr.start(t);tr.stop(t+d+.1);}
+    o1.connect(lp);o2.connect(g2);g2.connect(lp);lp.connect(g);g.connect(master);
+    const end=t+Math.max(.05,d*.88);env(g,t,peak*vel,att,.08,sus*vel,end,.05);
+    o1.start(t);o2.start(t);o1.stop(end+.08);o2.stop(end+.08);
+  }
+  function tone(t,type,m,peak,dur,cut){
+    const o=ctx.createOscillator(),g=ctx.createGain();o.type=type;o.frequency.value=mf(m);
+    let n=o;if(cut){const lp=ctx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=cut;o.connect(lp);n=lp;}
+    n.connect(g);g.connect(master);g.gain.setValueAtTime(peak,t);g.gain.exponentialRampToValueAtTime(.0008,t+dur);o.start(t);o.stop(t+dur+.02);
+  }
+  function kick(t,soft){const o=ctx.createOscillator(),g=ctx.createGain();o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(45,t+.12);g.gain.setValueAtTime(soft?.16:.32,t);g.gain.exponentialRampToValueAtTime(.001,t+.18);o.connect(g);g.connect(master);o.start(t);o.stop(t+.2);}
+  function hat(t,soft){const s=ctx.createBufferSource(),hp=ctx.createBiquadFilter(),g=ctx.createGain();s.buffer=noise;hp.type='highpass';hp.frequency.value=6500;g.gain.setValueAtTime(soft?.022:.045,t);g.gain.exponentialRampToValueAtTime(.001,t+.05);s.connect(hp);hp.connect(g);g.connect(master);s.start(t);s.stop(t+.06);}
+  function play(e,t){
+    if(e.k==='lead')lead(t,e.m,e.d,e.tim,e.vel);
+    else if(e.k==='piano')lead(t,e.m,Math.min(e.d,1.4),'piano',e.vel);
+    else if(e.k==='harm')lead(t,e.m,e.d,'harm');
+    else if(e.k==='bass')tone(t,'triangle',e.ch.b,.28,.32);
+    else if(e.k==='fifth')tone(t,'triangle',e.ch.f+12>e.ch.b+12?e.ch.f:e.ch.f,.24,.28);
+    else if(e.k==='chord')e.ch.c.forEach(m=>tone(t,'square',m,.028,.13,1500));
+    else if(e.k==='kick')kick(t,e.soft);
+    else if(e.k==='hat')hat(t,e.soft);
+  }
+  function tick(){
+    const ahead=ctx.currentTime+.25;
+    for(let guard=0;guard<400;guard++){
+      if(evI>=cur.ev.length){loopStart+=cur.len;cur=nextSection();evI=0;const nm=cur.tune,at0=loopStart;setTimeout(()=>{nowName=nm;onSong&&onSong(nm);},Math.max(0,(at0-ctx.currentTime)*1000));continue;}
+      const e=cur.ev[evI],at=loopStart+e.t;
+      if(at>ahead)break;
+      if(at>=ctx.currentTime-.03)play(e,at);
+      evI++;
+    }
+  }
+  let keep=null;
+  function keepAlive(on){
+    try{
+      if(!keep){
+        const n=4000,b=new ArrayBuffer(44+n),v=new DataView(b),w=(o,t)=>{for(let i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i));};
+        w(0,'RIFF');v.setUint32(4,36+n,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+        v.setUint32(24,8000,true);v.setUint32(28,8000,true);v.setUint16(32,1,true);v.setUint16(34,8,true);w(36,'data');v.setUint32(40,n,true);
+        for(let i=0;i<n;i++)v.setUint8(44+i,128);
+        keep=document.createElement('audio');keep.src=URL.createObjectURL(new Blob([b],{type:'audio/wav'}));
+        keep.loop=true;keep.setAttribute('playsinline','');keep.setAttribute('x-webkit-airplay','deny');
+      }
+      if(on){const pr=keep.play();if(pr&&pr.catch)pr.catch(()=>{});}else keep.pause();
+    }catch(e){}
+  }
+  function vol(){return +store.get('ssim-vol',.5);}
+  function start(){
+    try{
+      if(!ctx||ctx.state!=='running'){
+        /* A stuck or interrupted engine (phone lock, calls, other audio) can't always be woken, so build a fresh one inside the tap. */
+        if(ctx){playing=false;clearInterval(timer);const old=ctx;ctx=null;try{old.onstatechange=null;old.close();}catch(e){}}
+        try{if(navigator.audioSession)navigator.audioSession.type='playback';}catch(e){}
+        ctx=new (window.AudioContext||window.webkitAudioContext)();
+        const comp=ctx.createDynamicsCompressor();master=ctx.createGain();master.gain.value=0;master.connect(comp);comp.connect(ctx.destination);
+        noise=ctx.createBuffer(1,ctx.sampleRate*.2,ctx.sampleRate);const d=noise.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
+        ctx.onstatechange=()=>onState&&onState();
+      }
+      keepAlive(true);
+      const r=ctx.resume();if(r&&r.then)r.then(()=>onState&&onState()).catch(()=>{});
+      if(playing){onState&&onState();return;}
+      playing=true;tryMidi();cur=nextSection();evI=0;loopStart=ctx.currentTime+.15;nowName=cur.tune;onSong&&onSong(nowName);
+      master.gain.cancelScheduledValues(ctx.currentTime);master.gain.setValueAtTime(0,ctx.currentTime);master.gain.linearRampToValueAtTime(Math.max(.05,vol())*.9,ctx.currentTime+.6);
+      clearInterval(timer);timer=setInterval(tick,40);tick();
+    }catch(e){playing=false;}
+  }
+  function stop(){
+    if(!ctx||!playing)return;playing=false;keepAlive(false);
+    master.gain.cancelScheduledValues(ctx.currentTime);master.gain.setValueAtTime(master.gain.value,ctx.currentTime);master.gain.linearRampToValueAtTime(0,ctx.currentTime+.35);
+    setTimeout(()=>{if(!playing)clearInterval(timer);},450);
+  }
+  function setVol(v){store.set('ssim-vol',v);if(ctx&&playing){master.gain.setTargetAtTime(v*.9,ctx.currentTime,.05);}}
+  document.addEventListener('visibilitychange',()=>{if(!ctx)return;if(document.hidden){ctx.suspend();keepAlive(false);}else if(playing){ctx.resume();keepAlive(true);}});
+  return {start,stop,setVol,get playing(){return playing;},get running(){return !!ctx&&ctx.state==='running';},set onState(f){onState=f;},set onSong(f){onSong=f;},get now(){return playing?nowName:'';},vol,tunes:TUNES,parseABC};
+})();
+const musicBtn=$('musicBtn'),musicVol=$('musicVol');
+musicVol.value=Music.vol();
+function voxOn(){try{return Vox.on;}catch(e){return false;}}
+function musicUI(){
+  const on=store.get('ssim-music',true),audible=Music.playing&&Music.running;
+  musicBtn.textContent=voxOn()?'♪ Music (vocals playing)':(!on?'♪ Music off':(audible?'♪ Music on':'♪ Tap for music'));
+  musicBtn.setAttribute('aria-pressed',on&&audible?'true':'false');
+  /* whenever music should be playing but isn't, the next tap anywhere restarts it */
+  const want=on&&!audible&&!voxOn();
+  ['touchend','click','keydown'].forEach(t=>{if(want)document.addEventListener(t,unlock,true);else document.removeEventListener(t,unlock,true);});
+}
+Music.onState=musicUI;
+musicBtn.onclick=()=>{
+  const audible=Music.playing&&Music.running;
+  if(voxOn()){Vox.stop(false);store.set('ssim-music',true);Music.start();}
+  else if(audible){store.set('ssim-music',false);Music.stop();}
+  else{store.set('ssim-music',true);Music.start();}
+  musicUI();setTimeout(musicUI,350);setTimeout(musicUI,900);
+};
+musicVol.addEventListener('input',()=>{Music.setVol(+musicVol.value);if(voxOn()){Vox.setVol(+musicVol.value);return;}if(store.get('ssim-music',true)&&!Music.running)Music.start();});
+function unlock(e){
+  if(e.target&&e.target.closest&&(e.target.closest('#musicBtn')||e.target.closest('#musicVol')||e.target.closest('#voxBtn')||e.target.closest('#vdock')))return;
+  if(voxOn())return;if(store.get('ssim-music',true)){Music.start();setTimeout(musicUI,350);}
+}
+
+musicUI();
+
+
+/* ============ songbook (public-domain lyrics) ============ */
+const DS=l=>[l,l,l,'Early in the morning!'];
+const SONGS=[
+ {name:"What Shall We Do with the Drunken Sailor",yt:"V12FuCX9xJM",ytBy:"The Irish Rovers",note:"Traditional capstan and halyard shanty, sung in the 1800s. Public domain.",
+  st:[
+   {l:DS('What shall we do with a drunken sailor?')},
+   {c:1,l:DS('Way hay and up she rises')},
+   {l:DS('Put him in the longboat till he\u2019s sober')},
+   {l:DS('Pull out the plug and wet him all over')},
+   {l:DS('Put him in the scuppers with a hosepipe on him')},
+   {l:DS('Heave him by the leg in a running bowline')},
+   {l:DS('Shave his belly with a rusty razor')},
+   {l:DS('That\u2019s what we do with a drunken sailor')},
+   {c:1,l:DS('Way hay and up she rises')}]},
+ {name:"Blow the Man Down",yt:"UlPs5T27QIs",ytBy:"The Longest Johns",note:"Traditional halyard shanty from the Liverpool packet ships. The crew sings the indented lines. Public domain.",
+  bmd:[['Oh, blow the man down, bullies, blow the man down,','Oh, blow the man down, bullies, blow him away,'],
+   ['As I was a-walking down Paradise Street,','A pretty young damsel I chanced for to meet.'],
+   ['She was round in the counter and bluff in the bow,','So I took in all sail and cried, \u201cWay enough now!\u201d'],
+   ['I hailed her in English, she answered me clear,','\u201cI\u2019m from the Black Arrow, bound to the Shakespeare.\u201d'],
+   ['So I tailed her my flipper and took her in tow,','And yardarm to yardarm away we did go.'],
+   ['But as we were going she said unto me,','\u201cThere\u2019s a spanking full-rigger just ready for sea.\u201d'],
+   ['But as soon as that packet was clear of the bar,','The mate knocked me down with the end of a spar.'],
+   ['So I give you fair warning before we belay,','Don\u2019t ever take heed of what pretty girls say.']]},
+ {name:"Sailor's Hornpipe",note:"Instrumental dance tune with no words. First printed around 1757 as \u201cThe College Hornpipe\u201d; this arrangement follows a 1928 fiddle transcription.",inst:1},
+ {name:"Fifteen Men on the Dead Man's Chest",yt:"vsoEcfqeklw",ytBy:"Carl Peterson",note:"The first verse is Billy Bones\u2019 song from Treasure Island by Robert Louis Stevenson (1883). Young E. Allison expanded it into the poem \u201cDerelict\u201d (1891, final version 1901), first set to music by Henry Waller in 1891. Public domain.",
+  der:[
+   ['Fifteen men on the dead man\u2019s chest\u2014','Drink and the devil had done for the rest\u2014',['The mate was fixed by the bos\u2019n\u2019s pike,','The bos\u2019n brained with a marlinspike','And Cookey\u2019s throat was marked belike','It had been gripped','By fingers ten;','And there they lay,','All good dead men,','Like break-o\u2019-day in a boozing-ken\u2014']],
+   ['Fifteen men of a whole ship\u2019s list\u2014','Dead and bedamned, and the rest gone whist!\u2014',['The skipper lay with his nob in gore','Where the scullion\u2019s axe his cheek had shore\u2014','And the scullion he was stabbed times four.','And there they lay,','And the soggy skies','Dripped all day long','In up-staring eyes\u2014','At murk sunset and at foul sunrise\u2014']],
+   ['Fifteen men of \u2019em stiff and stark\u2014','Ten of the crew had the Murder mark\u2014',['\u2019Twas a cutlass swipe, or an ounce of lead,','Or a yawing hole in a battered head\u2014','And the scuppers glut with a rotting red.','And there they lay\u2014','Aye, damn my eyes!\u2014','All lookouts clapped','On paradise\u2014','All souls bound just contrariwise\u2014']],
+   ['Fifteen men of \u2019em good and true\u2014','Every man jack could ha\u2019 sailed with Old Pew\u2014',['There was chest on chest full of Spanish gold,','With a ton of plate in the middle hold,','And the cabins riot of stuff untold.','And they lay there','That had took the plum,','With sightless glare','And their lips struck dumb,','While we shared all by the rule of thumb\u2014']],
+   ['More was seen through the sternlight screen\u2014','Chartings ondoubt where a woman had been\u2014',['A flimsy shift on a bunker cot,','With a thin dirk slot through the bosom spot','And the lace stiff-dry in a purplish blot.','Or was she wench \u2026','Or some shuddering maid\u2026?','That dared the knife','And that took the blade!','By God! she was stuff for a plucky jade\u2014']],
+   ['Fifteen men on the dead man\u2019s chest\u2014','Drink and the devil had done for the rest\u2014',['We wrapped \u2019em all in a mains\u2019l tight,','With twice ten turns of a hawser\u2019s bight,','And we heaved \u2019em over and out of sight\u2014','With a yo-heave-ho!','And a fare-you-well!','And a sullen plunge','In the sullen swell','Ten fathoms deep on the road to hell\u2014']]]}
+];
+const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function songHTML(sg){
+  if(sg.inst) return '<p class="muted">No lyrics: this one is a pure instrumental. It\u2019s the tune sailors danced the hornpipe to on deck.</p>';
+  if(sg.st) return sg.st.map(v=>`<div class="st${v.c?' ch':''}">${v.l.map(x=>`<span>${esc(x)}</span>`).join('')}</div>`).join('');
+  if(sg.bmd) return sg.bmd.map((c,i)=>`<div class="st${i===0?' ch':''}"><span>${esc(c[0])}</span><span class="rs">Way-hey, blow the man down!</span><span>${esc(c[1])}</span><span class="rs">Give me some time to blow the man down!</span></div>`).join('');
+  const Y='Yo-ho-ho and a bottle of rum!';
+  return sg.der.map((v,i)=>`<div class="st"${i===4?' style="font-style:italic"':''}><span>${esc(v[0])}</span><span class="rs">${Y}</span><span>${esc(v[1])}</span><span class="rs">${Y}</span>${v[2].map(x=>`<span>${esc(x)}</span>`).join('')}<span class="rs">${Y}</span></div>`).join('');
+}
+
+/* vocals via YouTube's official player */
+const IS_PWA=!!window.LAYLINE_PWA;
+function ytId(u){if(!u)return null;u=u.trim();if(/^[\w-]{11}$/.test(u))return u;const m=u.match(/(?:v=|youtu\.be\/|embed\/|shorts\/)([\w-]{11})/);return m?m[1]:null;}
+function songVideo(sg){const own=store.get('ssim-yt',{})[sg.name];return own||sg.yt||null;}
+function voxRender(sg,playNow){
+  const el=$('sbVox');
+  if(sg.inst){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='';
+  const f=vFiles[sg.name],id=songVideo(sg),own=store.get('ssim-yt',{})[sg.name];
+  let h=`<strong>Sung version</strong>`;
+  h+=`<p class="muted" style="font-size:.88rem;margin:4px 0 8px">${f?'Your audio file: <strong>'+esc(f.fname)+'</strong>. It plays when you turn on 🎤 Vocals, and stays on this device.':'Attach an audio file from your phone (a track you own or one you recorded) and it plays with 🎤 Vocals, even offline.'}</p>`;
+  h+=`<div class="row"><label class="btn primary" style="cursor:pointer">${f?'Replace file':'Add audio file'}<input type="file" id="voxFile" accept="audio/*,.mp3,.m4a,.aac,.wav" style="display:none"></label>${f?'<button class="btn" id="voxFileDel">Remove</button><button class="btn" id="voxFilePlay">Play now</button>':''}</div><p class="muted" id="voxFileMsg" style="font-size:.85rem;margin:6px 0 0"></p>`;
+  if(id){
+    const url='https://www.youtube.com/watch?v='+id;
+    if(IS_PWA){
+      h+=`<p class="muted" style="font-size:.88rem;margin:12px 0 0">Or stream it from YouTube (${esc(own?'your chosen video':(sg.ytBy||'YouTube'))}):</p>`;
+      h+=playNow?`<div class="frame"><iframe src="https://www.youtube-nocookie.com/embed/${id}?autoplay=1&playsinline=1&rel=0" title="${esc(sg.name)} on YouTube" allow="autoplay; encrypted-media; picture-in-picture" allowfullscreen></iframe></div>`
+        :`<div class="row" style="margin-top:8px"><button class="btn" id="voxPlay">Play with vocals</button><a class="btn" href="${url}" target="_blank" rel="noopener">Open in YouTube</a></div>`;
+    } else h+=`<div class="row" style="margin-top:10px"><a class="btn" href="${url}" target="_blank" rel="noopener">Listen on YouTube (${esc(sg.ytBy||'YouTube')})</a></div>`;
+    h+=`<details style="margin-top:10px"><summary style="cursor:pointer;font-size:.9rem">Use a different YouTube version</summary><div class="row" style="margin-top:8px"><input id="voxUrl" placeholder="Paste a YouTube link" value="${own?'https://youtu.be/'+own:''}"><button class="btn" id="voxSave">Save</button>${own?'<button class="btn" id="voxReset">Reset</button>':''}</div><p class="muted" id="voxMsg" style="font-size:.85rem;margin:6px 0 0"></p></details>`;
+  }
+  el.innerHTML=h;
+  $('voxFile').onchange=e=>{const file=e.target.files&&e.target.files[0];if(!file)return;
+    if(file.size>60e6){$('voxFileMsg').textContent='That file is over 60 MB. Try a shorter or compressed version.';return;}
+    $('voxFileMsg').textContent='Saving…';
+    VDB.put(sg.name,{blob:file,fname:file.name}).then(loadVFiles).then(()=>{voxRender(sg,false);$('voxFileMsg').textContent='Saved. Turn on 🎤 Vocals to hear it while you race.';})
+      .catch(()=>{$('voxFileMsg').textContent='Couldn’t save the file on this device. Storage may be full or turned off.';});};
+  const fd=$('voxFileDel');if(fd)fd.onclick=()=>VDB.del(sg.name).then(loadVFiles).then(()=>voxRender(sg,false));
+  const fp=$('voxFilePlay');if(fp)fp.onclick=()=>{closeSongbook();if(Vox.on)Vox.stop(false);Vox.start();};
+  const pb=$('voxPlay');if(pb)pb.onclick=()=>{if(Vox.on)Vox.stop(false);Music.stop();musicUI();voxRender(sg,true);};
+  const sv=$('voxSave');if(sv)sv.onclick=()=>{const v=ytId($('voxUrl').value);if(!v){$('voxMsg').textContent='That doesn’t look like a YouTube link. Copy it from the Share button on the video.';return;}const all=store.get('ssim-yt',{});all[sg.name]=v;store.set('ssim-yt',all);voxRender(sg,false);};
+  const rb=$('voxReset');if(rb)rb.onclick=()=>{const all=store.get('ssim-yt',{});delete all[sg.name];store.set('ssim-yt',all);voxRender(sg,false);};
+}
+
+/* ---- vocals: your own audio files (works everywhere) + YouTube's player (home-screen version) ---- */
+const VDB=(()=>{
+  let dbp=null;
+  function db(){if(!dbp)dbp=new Promise((res,rej)=>{try{const r=indexedDB.open('ssim-vocals',1);r.onupgradeneeded=()=>r.result.createObjectStore('files');r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error);}catch(e){rej(e);}});return dbp;}
+  const tx=(mode,fn)=>db().then(d=>new Promise((res,rej)=>{const t=d.transaction('files',mode),st=t.objectStore('files');const q=fn(st);t.oncomplete=()=>res(q&&q.result);t.onerror=()=>rej(t.error);}));
+  return {put:(k,v)=>tx('readwrite',st=>st.put(v,k)),del:k=>tx('readwrite',st=>st.delete(k)),all:()=>db().then(d=>new Promise((res,rej)=>{const out={},t=d.transaction('files','readonly'),c=t.objectStore('files').openCursor();c.onsuccess=()=>{const cur=c.result;if(cur){out[cur.key]=cur.value;cur.continue();}else res(out);};c.onerror=()=>rej(c.error);}))};
+})();
+const vFiles={};  /* song name -> {url, fname} */
+function loadVFiles(){return VDB.all().then(all=>{Object.keys(vFiles).forEach(k=>{URL.revokeObjectURL(vFiles[k].url);delete vFiles[k];});Object.keys(all).forEach(k=>{const v=all[k];if(v&&v.blob)vFiles[k]={url:URL.createObjectURL(v.blob),fname:v.fname||'audio file'};});}).catch(()=>{});}
+const Vox=(()=>{
+  let player=null,apiReady=false,apiLoading=false,on=false,queue=[],startTimer=null,cur=null;
+  const audio=$('voxAudio');
+  function buildQueue(){
+    const q=[];SONGS.filter(sg=>!sg.inst).forEach(sg=>{if(vFiles[sg.name])q.push({name:sg.name,type:'file'});else if(IS_PWA&&songVideo(sg))q.push({name:sg.name,type:'yt',id:songVideo(sg)});});
+    for(let i=q.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[q[i],q[j]]=[q[j],q[i]];}return q;}
+  function ui(){$('voxBtn').textContent=on?'🎤 Vocals on':'🎤 Vocals off';$('voxBtn').setAttribute('aria-pressed',on?'true':'false');$('vdock').classList.toggle('hidden',!on);document.body.classList.toggle('docked',on);
+    const yt=cur&&cur.type==='yt';$('vdplayer').style.display=yt?'':'none';$('vdPause').style.display=yt?'none':'';document.body.classList.toggle('dockedyt',on&&yt);}
+  function title(item,sub){$('vdTitle').textContent=item?item.name:'Sung versions';
+    $('vdSub').textContent=sub||(item?(item.type==='file'?'Your file: '+vFiles[item.name].fname:((SONGS.find(s=>s.name===item.name)||{}).ytBy||'YouTube')):'');}
+  function loadApi(cb){
+    if(apiReady)return cb();
+    const prev=window.onYouTubeIframeAPIReady;window.onYouTubeIframeAPIReady=()=>{apiReady=true;if(prev)prev();cb();};
+    if(apiLoading)return;apiLoading=true;
+    const sc=document.createElement('script');sc.src='https://www.youtube.com/iframe_api';
+    sc.onerror=()=>{apiLoading=false;title(cur,'Couldn’t reach YouTube. Check your signal.');};
+    document.head.appendChild(sc);
+  }
+  function playYT(item){
+    loadApi(()=>{
+      if(!on||cur!==item)return;
+      if(player){try{player.loadVideoById(item.id);}catch(e){}}
+      else player=new YT.Player('ytmount',{width:200,height:200,host:'https://www.youtube-nocookie.com',videoId:item.id,playerVars:{autoplay:1,playsinline:1,rel:0},
+        events:{onReady:e=>{try{e.target.setVolume(Math.round(Music.vol()*100));e.target.playVideo();}catch(x){}},
+          onStateChange:e=>{if(e.data===0)next();if(e.data===1){clearTimeout(startTimer);title(cur);}},
+          onError:()=>{title(cur,'This version won’t play inside the app, so it’s skipped. Paste a different link in Lyrics.');setTimeout(next,2000);}}});
+      clearTimeout(startTimer);startTimer=setTimeout(()=>{try{if(player.getPlayerState()!==1)title(cur,'Tap play on the video to start the singing.');}catch(e){}},2500);
+    });
+  }
+  function play(){
+    cur=queue[0];if(!cur)return;ui();title(cur);
+    if(cur.type==='file'){try{if(player)player.stopVideo();}catch(e){}audio.src=vFiles[cur.name].url;audio.volume=Math.min(1,Music.vol()*1.4);
+      const pr=audio.play();if(pr&&pr.catch)pr.catch(()=>title(cur,'Tap Play to start.'));$('vdPause').textContent='Pause';}
+    else{audio.pause();playYT(cur);}
+  }
+  function next(){if(!queue.length)return;queue.push(queue.shift());play();}
+  function start(){
+    queue=buildQueue();
+    if(!queue.length){openSongbook(true);return;}
+    on=true;Music.stop();play();musicUI();
+  }
+  function stop(resume){on=false;clearTimeout(startTimer);audio.pause();try{if(player)player.stopVideo();}catch(e){}cur=null;ui();
+    if(resume!==false&&store.get('ssim-music',true))Music.start();musicUI();setTimeout(musicUI,400);}
+  function toggle(){if(!cur||cur.type!=='file')return;if(audio.paused){audio.play();$('vdPause').textContent='Pause';}else{audio.pause();$('vdPause').textContent='Play';}}
+  function setVol(v){audio.volume=Math.min(1,v*1.4);try{if(player)player.setVolume(Math.round(v*100));}catch(e){}}
+  audio.addEventListener('ended',()=>{if(on)next();});
+  return {start,stop,next,toggle,setVol,get on(){return on;}};
+})();
+$('voxBtn').onclick=()=>{if(Vox.on)Vox.stop();else Vox.start();};
+$('vdNext').onclick=()=>Vox.next();
+$('vdOff').onclick=()=>Vox.stop();
+$('vdPause').onclick=()=>Vox.toggle();
+$('vdLyrics').onclick=()=>openSongbook();
+loadVFiles();
+let sbSel=0;
+function sbRender(){
+  const now=Music.now;
+  $('sbNow').textContent=now?`Now playing: ${now}`:(store.get('ssim-music',true)?'Music is paused. Tap the music button to start it.':'Music is off.');
+  $('sbTabs').innerHTML=SONGS.map((sg,i)=>`<button role="tab" aria-selected="${i===sbSel}" data-i="${i}">${esc(sg.name.replace('What Shall We Do with the ',''))}${sg.name===now?'<span class="dot" aria-label="playing"></span>':''}</button>`).join('');
+  const sg=SONGS[sbSel];
+  $('sbTitle').textContent=sg.name;
+  let note=sg.note;
+  if(sg.der&&!Music.tunes.some(t=>t.midi)) note+=' Its melody plays in the home-screen version of the app once the free 1891 score file is added (see the README). Here the words are for reading or singing along to your own tune.';
+  $('sbNote').textContent=note;
+  if($('sbVox').dataset.song!==sg.name){$('sbVox').dataset.song=sg.name;voxRender(sg,false);}
+  $('sbText').innerHTML=songHTML(sg);
+}
+$('sbTabs').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;sbSel=+b.dataset.i;sbRender();});
+function openSongbook(needFile){const now=Music.now;const i=SONGS.findIndex(x=>x.name===now);if(i>=0)sbSel=i;if(needFile===true)sbSel=0;$('songbook').classList.remove('hidden');document.body.style.overflow='hidden';sbRender();if(needFile===true){$('sbNow').textContent='To hear vocals here, add an audio file to a song below, then tap 🎤 Vocals.';}$('sbClose').focus();}
+function closeSongbook(){$('sbVox').innerHTML='';$('sbVox').dataset.song='';$('songbook').classList.add('hidden');document.body.style.overflow='';$('songBtn').focus();}
+$('songBtn').onclick=openSongbook;$('sbClose').onclick=closeSongbook;
+$('songbook').addEventListener('click',e=>{if(e.target.id==='songbook')closeSongbook();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!$('songbook').classList.contains('hidden'))closeSongbook();});
+Music.onSong=nm=>{if(!$('songbook').classList.contains('hidden')&&!$('sbVox').querySelector('iframe')){const i=SONGS.findIndex(x=>x.name===nm);if(i>=0)sbSel=i;sbRender();}};
+
+/* init */
+codeIn.value=dailyCode();
+setDiff(diff);
+if(!store.get('ssim-tut-done',false)) openTut();
+})();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{});});}
+</script>
+</body>
+</html>
